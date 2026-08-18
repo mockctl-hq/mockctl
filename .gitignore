@@ -1,0 +1,33 @@
+# Binaries
+/bin/
+mockctl
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test and coverage artifacts
+*.test
+*.out
+*.prof
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Vendor
+vendor/
+
+# Flutter UI (if developed inside the frontend folder)
+frontend/build/
+frontend/.dart_tool/
+frontend/.packages
+frontend/.pub-cache/
+frontend/pubspec.lock
