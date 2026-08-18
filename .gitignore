@@ -1,7 +1,5 @@
 # Binaries
 /bin/
-mockctl
-*.exe
 *.exe~
 *.dll
 *.so
