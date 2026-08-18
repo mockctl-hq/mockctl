@@ -43,7 +43,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.mockctl.yaml)")
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug structured logging")
-	
+
 	// Bind viper explicitly to ignore errors
 	_ = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 }
@@ -83,7 +83,7 @@ func setupLogger() {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: level,
 	})
-	
+
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
 }
