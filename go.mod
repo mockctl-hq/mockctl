@@ -1,6 +1,6 @@
 module github.com/upentudu/mockctl
 
-go 1.26.5
+go 1.21
 
 require (
 	github.com/spf13/cobra v1.10.2
