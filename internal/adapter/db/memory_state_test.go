@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 	"testing"
-
 )
 
 func TestMemoryStateStore_CRUD(t *testing.T) {
@@ -33,7 +32,7 @@ func TestMemoryStateStore_CRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to patch document: %v", err)
 	}
-	
+
 	doc, _ = store.Get(ctx, "users", "1")
 	if doc["age"] != 25 {
 		t.Errorf("Expected age 25 after patch, got %v", doc["age"])
@@ -44,7 +43,7 @@ func TestMemoryStateStore_CRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to delete document: %v", err)
 	}
-	
+
 	// Ensure it's deleted
 	_, err = store.Get(ctx, "users", "1")
 	if err == nil {
@@ -62,7 +61,7 @@ func TestMemoryStateStore_Concurrency(t *testing.T) {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			
+
 			// Constant chaotic reads and writes
 			_ = store.Insert(ctx, "load_test", "doc", map[string]any{"val": id})
 			_, _ = store.Get(ctx, "load_test", "doc")

@@ -67,7 +67,7 @@ func newBBoltSystemStore(dbPath string, forceReadOnly bool) (*BBoltSystemStore, 
 			return nil
 		})
 		if err != nil {
-			db.Close()
+			_ = db.Close()
 			return nil, err
 		}
 	}

@@ -20,7 +20,7 @@ func TestBBoltSystemStore_CRUD(t *testing.T) {
 	}
 	// Ensure proper cleanup
 	t.Cleanup(func() {
-		store.Close(ctx)
+		_ = store.Close(ctx)
 	})
 
 	// 1. Settings Bucket
@@ -42,7 +42,7 @@ func TestBBoltSystemStore_CRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to save auth token: %v", err)
 	}
-	
+
 	token, err := store.GetAuthToken(ctx)
 	if err != nil {
 		t.Fatalf("Failed to get auth token: %v", err)
@@ -50,7 +50,7 @@ func TestBBoltSystemStore_CRUD(t *testing.T) {
 	if token != "fake.jwt.token" {
 		t.Errorf("Expected 'fake.jwt.token', got %s", token)
 	}
-	
+
 	// 3. Telemetry Bucket
 	err = store.LogTelemetry(ctx, "app_start", map[string]any{"os": "linux", "arch": "arm64"})
 	if err != nil {
@@ -71,7 +71,7 @@ func TestBBoltSystemStore_ReadOnlyFallback(t *testing.T) {
 
 	// Write baseline data
 	_ = store1.SetSetting(ctx, "port", "8080")
-	store1.Close(ctx) // Explicitly close to release flock so store2 doesn't hang in test.
+	_ = store1.Close(ctx) // Explicitly close to release flock so store2 doesn't hang in test.
 
 	// Instance 2 (Secondary)
 	// Use the internal constructor to force read-only mode.
@@ -79,7 +79,7 @@ func TestBBoltSystemStore_ReadOnlyFallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Instance 2 crashed instead of falling back to Read-Only: %v", err)
 	}
-	defer store2.Close(ctx)
+	defer func() { _ = store2.Close(ctx) }()
 
 	// 1. Verify Read operation works in Read-Only mode
 	val, err := store2.GetSetting(ctx, "port")
