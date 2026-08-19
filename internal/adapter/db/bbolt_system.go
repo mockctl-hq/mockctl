@@ -39,14 +39,14 @@ func newBBoltSystemStore(dbPath string, forceReadOnly bool) (*BBoltSystemStore, 
 	var err error
 
 	if readOnly {
-		db, err = bbolt.Open(dbPath, 0666, &bbolt.Options{ReadOnly: true})
+		db, err = bbolt.Open(dbPath, 0666, &bbolt.Options{ReadOnly: true, Timeout: 1 * time.Second})
 	} else {
 		db, err = bbolt.Open(dbPath, 0600, &bbolt.Options{Timeout: 1 * time.Second})
 		if err != nil {
 			if err == bbolt.ErrTimeout {
 				// PKS-026 Fallback: Another CLI instance holds the lock.
 				readOnly = true
-				db, err = bbolt.Open(dbPath, 0666, &bbolt.Options{ReadOnly: true})
+				db, err = bbolt.Open(dbPath, 0666, &bbolt.Options{ReadOnly: true, Timeout: 1 * time.Second})
 			}
 		}
 	}

@@ -68,13 +68,13 @@ func TestBBoltSystemStore_ReadOnlyFallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Instance 1 failed: %v", err)
 	}
-	defer store1.Close(ctx)
 
 	// Write baseline data
 	_ = store1.SetSetting(ctx, "port", "8080")
+	store1.Close(ctx) // Explicitly close to release flock so store2 doesn't hang in test.
 
-	// Instance 2 (Secondary - attempts to open the same locked file)
-	// Use the internal constructor to force read-only mode, as same-process OS locks don't always block.
+	// Instance 2 (Secondary)
+	// Use the internal constructor to force read-only mode.
 	store2, err := newBBoltSystemStore(dbPath, true)
 	if err != nil {
 		t.Fatalf("Instance 2 crashed instead of falling back to Read-Only: %v", err)
