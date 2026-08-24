@@ -128,8 +128,8 @@ Engineering documents define **how** the product will be built.
 | PKS-026 | Database Design | ✅ Approved |
 | PKS-027 | API Design | ✅ Approved |
 | PKS-028 | Coding Standards | ✅ Approved |
-| PKS-029 | Testing Strategy | ⏳ Planned |
-| PKS-030 | Deployment Architecture | ⏳ Planned |
+| PKS-029 | Testing Strategy | ✅ Approved |
+| PKS-030 | Deployment Architecture | ✅ Approved |
 
 ---
 

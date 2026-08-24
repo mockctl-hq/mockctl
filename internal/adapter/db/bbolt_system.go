@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/upentudu/mockctl/internal/core/ports"
+	"github.com/mockctl-hq/mockctl/internal/core/ports"
 	"go.etcd.io/bbolt"
 )
 

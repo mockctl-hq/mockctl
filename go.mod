@@ -1,4 +1,4 @@
-module github.com/upentudu/mockctl
+module github.com/mockctl-hq/mockctl
 
 go 1.24.0
 

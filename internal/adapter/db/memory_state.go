@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/upentudu/mockctl/internal/core/ports"
+	"github.com/mockctl-hq/mockctl/internal/core/ports"
 )
 
 const maxDocsPerCollection = 10000
