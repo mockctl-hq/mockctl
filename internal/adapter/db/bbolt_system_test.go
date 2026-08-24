@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/upentudu/mockctl/internal/core/ports"
+	"github.com/mockctl-hq/mockctl/internal/core/ports"
 )
 
 func TestBBoltSystemStore_CRUD(t *testing.T) {
