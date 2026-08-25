@@ -183,9 +183,7 @@ func normalizeSchema(ref *openapi3.SchemaRef, visited map[string]bool, depth int
 		Default:  schema.Default,
 	}
 
-	for _, e := range schema.Enum {
-		normalized.Enum = append(normalized.Enum, e)
-	}
+	normalized.Enum = append(normalized.Enum, schema.Enum...)
 
 	if schema.Items != nil {
 		items, err := normalizeSchema(schema.Items, visited, depth+1)
