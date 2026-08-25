@@ -13,7 +13,7 @@ import (
 func (s *HTTPServer) setupAdminRoutes() {
 	s.router.Route("/__mockctl", func(r chi.Router) {
 		r.Use(s.adminSecurityMiddleware)
-		
+
 		r.Get("/health", s.handleHealth)
 		// TODO: Add other admin API routes (e.g., /config, /logs)
 	})
@@ -41,7 +41,7 @@ func (s *HTTPServer) adminSecurityMiddleware(next http.Handler) http.Handler {
 			s.sendAdminError(w, "UNAUTHORIZED", "Missing or invalid Authorization header", http.StatusUnauthorized)
 			return
 		}
-		
+
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		expectedToken, err := s.systemStore.GetAuthToken(r.Context())
 		if err != nil || expectedToken == "" {

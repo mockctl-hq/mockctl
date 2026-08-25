@@ -59,7 +59,7 @@ func NewHTTPServer(logger shared.Logger, store ports.SystemStore, engine http.Ha
 func (s *HTTPServer) loggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		
+
 		// Create a sanitized clone of headers for logging
 		sanitizedHeaders := r.Header.Clone()
 		if sanitizedHeaders.Get("Authorization") != "" {
@@ -83,7 +83,7 @@ func (s *HTTPServer) loggerMiddleware(next http.Handler) http.Handler {
 func (s *HTTPServer) setupRoutes() {
 	// Mount Admin Routes under /__mockctl/*
 	s.setupAdminRoutes()
-	
+
 	// Mount RuntimeEngine as the catch-all wildcard for mock execution
 	s.router.Mount("/", s.engine)
 }

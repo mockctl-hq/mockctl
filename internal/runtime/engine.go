@@ -109,7 +109,7 @@ func (e *RuntimeEngine) processRequest(w http.ResponseWriter, r *http.Request, e
 func (e *RuntimeEngine) sendError(w http.ResponseWriter, code string, msg string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	
+
 	payload := map[string]any{
 		"success": false,
 		"error": map[string]any{

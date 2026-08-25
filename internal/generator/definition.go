@@ -10,8 +10,8 @@ type RuntimeDefinition struct {
 type EndpointHandler struct {
 	Method      string
 	Path        string
-	PathParams  []string // e.g., ["id"] for /users/{id}
-	QueryParams []string // Expected query parameters
+	PathParams  []string                 // e.g., ["id"] for /users/{id}
+	QueryParams []string                 // Expected query parameters
 	Responses   map[int]ResponseTemplate // Maps HTTP status (e.g. 200, 404) to its template
 }
 

@@ -33,7 +33,7 @@ func (a *App) StartServer(ctx context.Context, port string) error {
 		return err
 	}
 	adminToken := hex.EncodeToString(tokenBytes)
-	
+
 	// Save to SystemStore
 	if err := a.systemStore.SaveAuthToken(ctx, adminToken); err != nil {
 		return err
@@ -70,7 +70,7 @@ func (a *App) StartServer(ctx context.Context, port string) error {
 		return err
 	case <-sigChan:
 		a.logger.Info("OS Signal received, beginning graceful shutdown...")
-		
+
 		// 5 second timeout for draining connections
 		shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
@@ -80,7 +80,7 @@ func (a *App) StartServer(ctx context.Context, port string) error {
 		}
 
 		// TODO: Trigger StateStore dump to temp-state.json
-		
+
 		a.logger.Info("Graceful shutdown completed successfully.")
 		return nil
 	}

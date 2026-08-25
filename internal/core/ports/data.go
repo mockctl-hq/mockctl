@@ -7,13 +7,13 @@ import "context"
 type ValueProvider interface {
 	// GenerateUUID returns a cryptographically secure random identifier.
 	GenerateUUID(ctx context.Context) string
-	
+
 	// GenerateString generates a random string based on a format/schema.
 	GenerateString(ctx context.Context, format string) string
-	
+
 	// GenerateInt generates a random integer within a range.
 	GenerateInt(ctx context.Context, min, max int) int
-	
+
 	// GenerateBoolean generates a random boolean.
 	GenerateBoolean(ctx context.Context) bool
 }
