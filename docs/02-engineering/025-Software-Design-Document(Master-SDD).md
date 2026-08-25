@@ -251,7 +251,7 @@ type ValueProvider interface {
 }
 
 type PayloadBuilder interface {
-    BuildFromSchema(ctx context.Context, schemaRef any) (map[string]any, error)
+    BuildFromSchema(ctx context.Context, schemaRef any) (any, error)
 }
 ```
 
@@ -279,7 +279,7 @@ type RuntimeDefinition struct {
 // ResponseTemplate holds the payload structure for a specific HTTP status
 type ResponseTemplate struct {
     Headers map[string]string
-    Body    map[string]any
+    Body    any
 }
 
 type EndpointHandler struct {
