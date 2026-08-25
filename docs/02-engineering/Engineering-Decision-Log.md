@@ -14,7 +14,7 @@
 >  
 > Authority: Engineering Decision Log
 > 
-> Decision Range: EDL-001 → EDL-053
+> Decision Range: EDL-001 → EDL-054
 > 
 > Document Type: Engineering Governance / Decision Record
 > 
@@ -1839,6 +1839,30 @@ The Mock:ctl Command Line Interface (CLI) is strictly an internal developer and 
 
 ---
 
+## EDL-054 — API Rate Limiting Foundation
+
+**Decision:**  
+Rate Limiter = `golang.org/x/time/rate`
+
+**Status:**  
+✅ Approved
+
+**Statement:**  
+Mock:ctl shall use the official `golang.org/x/time/rate` package (Token Bucket algorithm) for all HTTP API rate-limiting requirements (specifically the Admin API).
+
+**Reason:**  
+- Ensures robust, race-condition-free rate limiting (e.g., 100 req/s).
+- Maintained by the core Go team, ensuring long-term stability and security.
+- Prevents malicious or bug-induced local DoS attacks on the Mock server.
+
+**Alternatives Considered:**
+- Implementing a custom rate limiter (complex, high risk of concurrency bugs).
+- Third-party packages (violates Official First principle when `x/time` exists).
+
+**Replacement Risk:**  Low
+
+---
+
 ## Document Governance
 
 This Engineering Decision Log is the authoritative record of approved engineering decisions for Mock:ctl.
@@ -1868,7 +1892,7 @@ The Engineering Decision Log is maintained as part of the Project Knowledge Syst
 
 **Status:** Active
 
-**Decision Range:** EDL-001 → EDL-053
+**Decision Range:** EDL-001 → EDL-054
 
 **Authority:** Engineering Decision Log
 
