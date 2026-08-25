@@ -34,9 +34,9 @@ func (g *MockGenerator) Generate(ctx context.Context, model *spec.SpecModel, wsC
 		handler, exists := def.Endpoints[route.Path]
 		if !exists {
 			handler = EndpointHandler{
-				Method:      route.Method,
-				Path:        route.Path,
-				Responses:   make(map[int]ResponseTemplate),
+				Method:    route.Method,
+				Path:      route.Path,
+				Responses: make(map[int]ResponseTemplate),
 			}
 		}
 

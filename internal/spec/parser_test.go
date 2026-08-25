@@ -34,7 +34,7 @@ paths:
 `
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "openapi.yaml")
-	os.WriteFile(path, []byte(content), 0644)
+	_ = os.WriteFile(path, []byte(content), 0644)
 
 	parser := NewOpenAPIParser()
 	model, err := parser.ParseFile(context.Background(), path)
@@ -66,8 +66,8 @@ func TestParseFile_Security_FileSizeLimit(t *testing.T) {
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "large.yaml")
 	f, _ := os.Create(path)
-	f.Truncate(maxFileSize + 1)
-	f.Close()
+	_ = f.Truncate(maxFileSize + 1)
+	_ = f.Close()
 
 	parser := NewOpenAPIParser()
 	_, err := parser.ParseFile(context.Background(), path)
@@ -103,7 +103,7 @@ components:
 `
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "circular.yaml")
-	os.WriteFile(path, []byte(content), 0644)
+	_ = os.WriteFile(path, []byte(content), 0644)
 
 	parser := NewOpenAPIParser()
 	_, err := parser.ParseFile(context.Background(), path)

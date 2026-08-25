@@ -77,13 +77,10 @@ func (p *OpenAPIParser) extractRoutesFromDoc(doc *openapi3.Swagger, globalBasePa
 			basePath = extractBasePath(pathItem.Servers[0].URL)
 		}
 
-		fullPath := basePath + path
-
 		for method, operation := range pathItem.Operations() {
-			opBasePath := basePath
+			fullPath := basePath + path
 			if operation.Servers != nil && len(*operation.Servers) > 0 {
-				opBasePath = extractBasePath((*operation.Servers)[0].URL)
-				fullPath = opBasePath + path
+				fullPath = extractBasePath((*operation.Servers)[0].URL) + path
 			}
 
 			// Iterate over responses
@@ -162,7 +159,7 @@ func normalizeSchema(ref *openapi3.SchemaRef, visited map[string]bool, depth int
 	if ref == nil || ref.Value == nil {
 		return nil, nil
 	}
-	
+
 	if depth > 10 {
 		return nil, fmt.Errorf("schema exceeds maximum recursion depth of 10")
 	}
