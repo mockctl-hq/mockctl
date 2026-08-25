@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
