@@ -43,7 +43,7 @@ func handlePanic(panicData any) {
 	}
 
 	dumpFile := "mockctl_crash_dump.json"
-	if err := os.WriteFile(dumpFile, bytes, 0644); err != nil {
+	if err := os.WriteFile(dumpFile, bytes, 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal: failed to save %s: %v\n", dumpFile, err)
 		return
 	}

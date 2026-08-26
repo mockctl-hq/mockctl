@@ -30,7 +30,7 @@ func NewBBoltSystemStore(dbPath string) (*BBoltSystemStore, error) {
 }
 
 func newBBoltSystemStore(dbPath string, forceReadOnly bool) (*BBoltSystemStore, error) {
-	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0750); err != nil {
 		return nil, err
 	}
 
