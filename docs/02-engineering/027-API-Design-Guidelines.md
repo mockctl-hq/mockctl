@@ -74,7 +74,11 @@ If a user attempts to load an OpenAPI spec that contains a route starting with `
 
 To make the Admin API easy to consume for automated test scripts and the Flutter UI, all responses must follow a strict, predictable JSON envelope.
 
-**Rule (Content-Type):** The Admin API strictly communicates using `application/json`. Any incoming request containing a body must send `Content-Type: application/json`. If not, the server MUST reject it with a `415 Unsupported Media Type` error. The only exception is the Real-Time Events endpoint which uses `text/event-stream`.
+**Rule (Content-Type):** The Admin API strictly communicates using `application/json`. Any incoming request containing a body must send `Content-Type: application/json`. If not, the server MUST reject it with a `415 Unsupported Media Type` error. 
+
+The only exceptions are:
+1. **Real-Time Events:** uses `text/event-stream`.
+2. **File Uploads (Projects):** uses `multipart/form-data` for OpenAPI spec streaming.
 
 ## 2.1 Success Response
 
@@ -170,24 +174,32 @@ These are the foundational endpoints that will be built into the `RuntimeEngine`
   - A completely unauthenticated, lightweight endpoint that returns a simple `{"status":"ok"}`. Used exclusively for Docker/Kubernetes health checks and CI/CD readiness probes.
 
 ## 6.2 State Management
-- `POST /__mockctl/state/reset`
-  - Instantly wipes the `map[string]map[string]any` database and re-initializes it.
-- `GET /__mockctl/state/export`
-  - Returns the entire current memory state as a downloadable JSON object.
+- `POST /__mockctl/projects/{name}/state/reset`
+  - Instantly wipes the project's memory state and re-initializes it.
+- `GET /__mockctl/projects/{name}/state/export`
+  - Returns the specific project's current memory state as a downloadable JSON object.
 
 ## 6.3 Chaos Engineering
-- `PATCH /__mockctl/chaos`
-  - Updates the active chaos configuration (e.g., payload: `{"error_rate": 20, "latency_ms": 500}`).
+- `PATCH /__mockctl/projects/{name}/chaos`
+  - Updates the active chaos configuration for the specific project (e.g., payload: `{"error_rate": 20, "latency_ms": 500}`).
 
 ## 6.4 Real-Time Events (WebSockets/SSE)
 - `GET /__mockctl/events`
   - Opens a Server-Sent Events (SSE) or WebSocket stream. The server pushes live metrics and incoming API request logs to the connected Flutter UI to populate real-time dashboards (similar to Charles Proxy or Postman).
 
-## 6.5 Workspace & Metrics
+## 6.5 Workspace & Projects
 - `GET /__mockctl/status`
-  - Returns server health, active OpenAPI file, and total request counts.
-- `POST /__mockctl/overrides`
-  - Injects a temporary static JSON response into a specific route for immediate testing.
+  - Returns server health, active daemon status, and total global request counts.
+- `GET /__mockctl/projects`
+  - Lists all active projects hosted by the daemon.
+- `POST /__mockctl/projects`
+  - Creates a new project (accepts `multipart/form-data` for OpenAPI file streaming) and mounts it to `/{projectName}`.
+- `DELETE /__mockctl/projects/{name}`
+  - Deletes a project and unmounts its routes.
+- `POST /__mockctl/projects/{name}/endpoints`
+  - Visually adds a single endpoint to an existing Hybrid Project without a full spec file.
+- `POST /__mockctl/projects/{name}/overrides`
+  - Injects a temporary static JSON response into a specific project route for immediate testing.
 
 ## 6.6 System & Monetization (SystemStore)
 These endpoints interact directly with the embedded `bbolt` database to manage the application's configuration and premium features.

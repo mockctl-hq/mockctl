@@ -1,4 +1,4 @@
-package db
+package storage
 
 import (
 	"context"
@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mockctl-hq/mockctl/internal/core/ports"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 )
 
 const maxDocsPerCollection = 10000
 
-// MemoryStateStore implements ports.StateStore with an ephemeral, thread-safe map.
+// MemoryStateStore implements shared.StateStore with an ephemeral, thread-safe map.
 type MemoryStateStore struct {
 	mu    sync.RWMutex
 	store map[string]map[string]map[string]any
@@ -33,7 +33,7 @@ func (m *MemoryStateStore) Insert(ctx context.Context, collection string, id str
 	}
 
 	if len(m.store[collection]) >= maxDocsPerCollection {
-		return ports.ErrLimitReached
+		return shared.ErrLimitReached
 	}
 
 	if id == "" {
@@ -59,12 +59,12 @@ func (m *MemoryStateStore) Get(ctx context.Context, collection string, id string
 
 	coll, exists := m.store[collection]
 	if !exists {
-		return nil, ports.ErrNotFound
+		return nil, shared.ErrNotFound
 	}
 
 	doc, exists := coll[id]
 	if !exists {
-		return nil, ports.ErrNotFound
+		return nil, shared.ErrNotFound
 	}
 
 	return doc, nil
@@ -93,11 +93,11 @@ func (m *MemoryStateStore) Update(ctx context.Context, collection string, id str
 
 	coll, exists := m.store[collection]
 	if !exists {
-		return ports.ErrNotFound
+		return shared.ErrNotFound
 	}
 
 	if _, exists := coll[id]; !exists {
-		return ports.ErrNotFound
+		return shared.ErrNotFound
 	}
 
 	// Preserve createdAt if it exists in the old doc
@@ -120,12 +120,12 @@ func (m *MemoryStateStore) Patch(ctx context.Context, collection string, id stri
 
 	coll, exists := m.store[collection]
 	if !exists {
-		return ports.ErrNotFound
+		return shared.ErrNotFound
 	}
 
 	existing, exists := coll[id]
 	if !exists {
-		return ports.ErrNotFound
+		return shared.ErrNotFound
 	}
 
 	merged := deepMerge(existing, partial)
@@ -141,11 +141,11 @@ func (m *MemoryStateStore) Delete(ctx context.Context, collection string, id str
 
 	coll, exists := m.store[collection]
 	if !exists {
-		return ports.ErrNotFound
+		return shared.ErrNotFound
 	}
 
 	if _, exists := coll[id]; !exists {
-		return ports.ErrNotFound
+		return shared.ErrNotFound
 	}
 
 	delete(coll, id)

@@ -1,11 +1,11 @@
-package db
+package storage
 
 import (
 	"context"
 	"path/filepath"
 	"testing"
 
-	"github.com/mockctl-hq/mockctl/internal/core/ports"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 )
 
 func TestBBoltSystemStore_CRUD(t *testing.T) {
@@ -89,7 +89,7 @@ func TestBBoltSystemStore_ReadOnlyFallback(t *testing.T) {
 
 	// 2. Verify Write operation is blocked and returns the correct Sentinel Error
 	err = store2.SetSetting(ctx, "port", "9090")
-	if err != ports.ErrDatabaseLocked {
+	if err != shared.ErrDatabaseLocked {
 		t.Errorf("Expected ErrDatabaseLocked on write in Read-Only mode, got: %v", err)
 	}
 }

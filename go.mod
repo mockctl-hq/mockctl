@@ -3,6 +3,7 @@ module github.com/mockctl-hq/mockctl
 go 1.24.0
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.16.0
 	github.com/getkin/kin-openapi v0.9.0
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/google/uuid v1.6.0
@@ -13,7 +14,6 @@ require (
 )
 
 require (
-	github.com/brianvoe/gofakeit/v7 v7.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect

@@ -1,4 +1,4 @@
-package http
+package runtime
 
 import (
 	"context"
@@ -6,14 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 )
-
-// FakeLogger
-type fakeLogger struct{}
-
-func (f *fakeLogger) Info(msg string, args ...any)             {}
-func (f *fakeLogger) Warn(msg string, args ...any)             {}
-func (f *fakeLogger) Error(msg string, err error, args ...any) {}
-func (f *fakeLogger) Debug(msg string, args ...any)            {}
 
 // FakeSystemStore
 type fakeSystemStore struct{}

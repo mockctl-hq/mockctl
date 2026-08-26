@@ -1,4 +1,4 @@
-package domain
+package project
 
 // WorkspaceContext holds project settings, seeds, and overrides.
 type WorkspaceContext struct {

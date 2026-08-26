@@ -101,11 +101,12 @@ Data is organized into "collections" (tables) and "documents" (rows).
 ```go
 // Conceptual mapping
 type MemoryDB struct {
-    // map[CollectionName] -> map[DocumentID] -> Payload
-    store map[string]map[string]any
+    // map[ProjectName] -> map[CollectionName] -> map[DocumentID] -> Payload
+    store map[string]map[string]map[string]any
 }
 ```
 
+- **ProjectName (string):** Represents the specific user project namespace (e.g., `auth-api`).
 - **CollectionName (string):** Represents the REST resource (e.g., `users`, `posts`).
 - **DocumentID (string):** The unique identifier for a specific resource (e.g., `123`, `uuid-5678`).
 - **Payload (any):** The parsed JSON payload of the resource, typically a `map[string]any`.

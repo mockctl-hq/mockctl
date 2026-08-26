@@ -1,4 +1,4 @@
-package http
+package runtime
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/mockctl-hq/mockctl/internal/core/ports"
 	"github.com/mockctl-hq/mockctl/internal/shared"
 	"golang.org/x/time/rate"
 )
@@ -24,7 +23,7 @@ type DomainError struct {
 // and the underlying net/http Server.
 type HTTPServer struct {
 	router      *chi.Mux
-	systemStore ports.SystemStore
+	systemStore shared.SystemStore
 	engine      http.Handler
 	logger      shared.Logger
 	httpServer  *http.Server
@@ -32,7 +31,7 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer initializes a new HTTPServer with the required middleware pipeline.
-func NewHTTPServer(logger shared.Logger, store ports.SystemStore, engine http.Handler) *HTTPServer {
+func NewHTTPServer(logger shared.Logger, store shared.SystemStore, engine http.Handler) *HTTPServer {
 	r := chi.NewRouter()
 
 	s := &HTTPServer{

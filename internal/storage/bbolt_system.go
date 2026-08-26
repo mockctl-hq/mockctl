@@ -1,4 +1,4 @@
-package db
+package storage
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mockctl-hq/mockctl/internal/core/ports"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 	"go.etcd.io/bbolt"
 )
 
@@ -18,7 +18,7 @@ var (
 	bucketMetadata  = []byte("metadata_bucket")
 )
 
-// BBoltSystemStore implements ports.SystemStore using embedded bbolt.
+// BBoltSystemStore implements shared.SystemStore using embedded bbolt.
 type BBoltSystemStore struct {
 	db       *bbolt.DB
 	readOnly bool
@@ -80,11 +80,11 @@ func (b *BBoltSystemStore) GetSetting(ctx context.Context, key string) (string, 
 	err := b.db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(bucketSettings)
 		if bucket == nil {
-			return ports.ErrNotFound
+			return shared.ErrNotFound
 		}
 		v := bucket.Get([]byte(key))
 		if v == nil {
-			return ports.ErrNotFound
+			return shared.ErrNotFound
 		}
 		val = string(v)
 		return nil
@@ -94,12 +94,12 @@ func (b *BBoltSystemStore) GetSetting(ctx context.Context, key string) (string, 
 
 func (b *BBoltSystemStore) SetSetting(ctx context.Context, key string, value string) error {
 	if b.readOnly {
-		return ports.ErrDatabaseLocked
+		return shared.ErrDatabaseLocked
 	}
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(bucketSettings)
 		if bucket == nil {
-			return ports.ErrNotFound
+			return shared.ErrNotFound
 		}
 		return bucket.Put([]byte(key), []byte(value))
 	})
@@ -107,12 +107,12 @@ func (b *BBoltSystemStore) SetSetting(ctx context.Context, key string, value str
 
 func (b *BBoltSystemStore) SaveAuthToken(ctx context.Context, token string) error {
 	if b.readOnly {
-		return ports.ErrDatabaseLocked
+		return shared.ErrDatabaseLocked
 	}
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(bucketAuth)
 		if bucket == nil {
-			return ports.ErrNotFound
+			return shared.ErrNotFound
 		}
 		return bucket.Put([]byte("jwt_token"), []byte(token))
 	})
@@ -123,11 +123,11 @@ func (b *BBoltSystemStore) GetAuthToken(ctx context.Context) (string, error) {
 	err := b.db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(bucketAuth)
 		if bucket == nil {
-			return ports.ErrNotFound
+			return shared.ErrNotFound
 		}
 		v := bucket.Get([]byte("jwt_token"))
 		if v == nil {
-			return ports.ErrNotFound
+			return shared.ErrNotFound
 		}
 		val = string(v)
 		return nil
@@ -143,12 +143,12 @@ func (b *BBoltSystemStore) LogTelemetry(ctx context.Context, event string, data 
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(bucketTelemetry)
 		if bucket == nil {
-			return ports.ErrNotFound
+			return shared.ErrNotFound
 		}
 
 		payload, err := json.Marshal(data)
 		if err != nil {
-			return ports.ErrInvalidPayload
+			return shared.ErrInvalidPayload
 		}
 
 		// Key by timestamp for chronologically ordered retrieval

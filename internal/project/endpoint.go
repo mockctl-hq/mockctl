@@ -1,4 +1,4 @@
-package domain
+package project
 
 // ResponseTemplate defines the expected output for a specific mock request.
 type ResponseTemplate struct {

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mockctl-hq/mockctl/internal/core/ports"
 	"github.com/mockctl-hq/mockctl/internal/generator"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 )
 
 // buildFlatPath extracts variables from the Go 1.22 mux and maps them into the path
@@ -63,7 +63,7 @@ func (e *RuntimeEngine) handleGet(ctx context.Context, w http.ResponseWriter, r 
 	}
 
 	if err != nil {
-		if err == ports.ErrNotFound {
+		if err == shared.ErrNotFound {
 			// Fallback to generating template data
 			template, ok := endpoint.Responses[http.StatusOK]
 			if !ok {
@@ -106,7 +106,7 @@ func (e *RuntimeEngine) handlePost(ctx context.Context, w http.ResponseWriter, r
 	// TODO: Inject timestamps if schema expects them
 
 	if err := e.state.Insert(ctx, collection, idStr, payload); err != nil {
-		if err == ports.ErrLimitReached {
+		if err == shared.ErrLimitReached {
 			e.sendError(w, "RATE_LIMIT", err.Error(), http.StatusTooManyRequests)
 			return
 		}
@@ -137,7 +137,7 @@ func (e *RuntimeEngine) handlePut(ctx context.Context, w http.ResponseWriter, r 
 
 	if err := e.state.Update(ctx, collection, id, payload); err != nil {
 		status := http.StatusInternalServerError
-		if err == ports.ErrNotFound {
+		if err == shared.ErrNotFound {
 			status = http.StatusNotFound
 		}
 		e.sendError(w, "UPDATE_FAILED", err.Error(), status)
@@ -164,7 +164,7 @@ func (e *RuntimeEngine) handlePatch(ctx context.Context, w http.ResponseWriter, 
 
 	if err := e.state.Patch(ctx, collection, id, payload); err != nil {
 		status := http.StatusInternalServerError
-		if err == ports.ErrNotFound {
+		if err == shared.ErrNotFound {
 			status = http.StatusNotFound
 		}
 		e.sendError(w, "PATCH_FAILED", err.Error(), status)
@@ -186,7 +186,7 @@ func (e *RuntimeEngine) handleDelete(ctx context.Context, w http.ResponseWriter,
 
 	if err := e.state.Delete(ctx, collection, id); err != nil {
 		status := http.StatusInternalServerError
-		if err == ports.ErrNotFound {
+		if err == shared.ErrNotFound {
 			status = http.StatusNotFound
 		}
 		e.sendError(w, "DELETE_FAILED", err.Error(), status)
