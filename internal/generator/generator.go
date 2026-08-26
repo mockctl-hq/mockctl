@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mockctl-hq/mockctl/internal/core/domain"
+	"github.com/mockctl-hq/mockctl/internal/project"
 	"github.com/mockctl-hq/mockctl/internal/data"
 	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/spec"
@@ -20,10 +20,10 @@ func NewMockGenerator(l shared.Logger, p data.ValueProvider) *MockGenerator {
 }
 
 type OverrideMerger interface {
-	MergeOverrides(def *RuntimeDefinition, ctx *domain.WorkspaceContext) error
+	MergeOverrides(def *RuntimeDefinition, ctx *project.WorkspaceContext) error
 }
 
-func (g *MockGenerator) Generate(ctx context.Context, model *spec.SpecModel, wsCtx *domain.WorkspaceContext) (*RuntimeDefinition, error) {
+func (g *MockGenerator) Generate(ctx context.Context, model *spec.SpecModel, wsCtx *project.WorkspaceContext) (*RuntimeDefinition, error) {
 	def := &RuntimeDefinition{
 		Endpoints: make(map[string]EndpointHandler),
 	}

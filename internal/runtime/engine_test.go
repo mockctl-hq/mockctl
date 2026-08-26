@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mockctl-hq/mockctl/internal/core/ports"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/generator"
 )
 
@@ -64,7 +64,7 @@ func (f *fakeStateStore) Get(ctx context.Context, col string, id string) (map[st
 	if f.data[col] != nil && f.data[col][id] != nil {
 		return f.data[col][id], nil
 	}
-	return nil, ports.ErrNotFound
+	return nil, shared.ErrNotFound
 }
 func (f *fakeStateStore) List(ctx context.Context, col string) ([]map[string]any, error) {
 	var res []map[string]any
@@ -84,7 +84,7 @@ func (f *fakeStateStore) Delete(ctx context.Context, col string, id string) erro
 		delete(f.data[col], id)
 		return nil
 	}
-	return ports.ErrNotFound
+	return shared.ErrNotFound
 }
 func (f *fakeStateStore) Reset(ctx context.Context) error { return nil }
 

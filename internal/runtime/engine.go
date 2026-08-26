@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/mockctl-hq/mockctl/internal/core/ports"
-	"github.com/mockctl-hq/mockctl/internal/generator"
 	"github.com/mockctl-hq/mockctl/internal/shared"
+	"github.com/mockctl-hq/mockctl/internal/generator"
 )
 
 // RuntimeEngine is the core executor that matches routes against the OpenAPI definition
@@ -14,9 +13,9 @@ import (
 type RuntimeEngine struct {
 	logger        shared.Logger
 	definition    *generator.RuntimeDefinition
-	state         ports.StateStore
-	chaos         ports.ChaosEvaluator
-	valueProvider ports.ValueProvider
+	state         shared.StateStore
+	chaos         shared.ChaosEvaluator
+	valueProvider shared.ValueProvider
 	clock         shared.Clock
 	mux           *http.ServeMux
 }
@@ -25,9 +24,9 @@ type RuntimeEngine struct {
 func NewRuntimeEngine(
 	l shared.Logger,
 	def *generator.RuntimeDefinition,
-	store ports.StateStore,
-	chaos ports.ChaosEvaluator,
-	vp ports.ValueProvider,
+	store shared.StateStore,
+	chaos shared.ChaosEvaluator,
+	vp shared.ValueProvider,
 	clk shared.Clock,
 ) *RuntimeEngine {
 	e := &RuntimeEngine{

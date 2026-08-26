@@ -11,18 +11,16 @@ import (
 	"syscall"
 	"time"
 
-	adapterHTTP "github.com/mockctl-hq/mockctl/internal/adapter/http"
-	"github.com/mockctl-hq/mockctl/internal/core/ports"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/generator"
 	"github.com/mockctl-hq/mockctl/internal/runtime"
-	"github.com/mockctl-hq/mockctl/internal/shared"
 )
 
 // App acts as the Composition Root orchestrating all components.
 type App struct {
 	logger      shared.Logger
-	systemStore ports.SystemStore
-	stateStore  ports.StateStore
+	systemStore shared.SystemStore
+	stateStore  shared.StateStore
 }
 
 // StartServer orchestrates the instantiation and execution of the HTTP Server pipeline.
@@ -43,15 +41,15 @@ func (a *App) StartServer(ctx context.Context, port string) error {
 	// 2. Setup Stubs for dependencies (ValueProvider, ChaosEvaluator, Clock, etc.)
 	// TODO: Inject real concrete implementations
 	var def *generator.RuntimeDefinition
-	var vp ports.ValueProvider
-	var chaos ports.ChaosEvaluator
+	var vp shared.ValueProvider
+	var chaos shared.ChaosEvaluator
 	clock := shared.NewRealClock()
 
 	// 3. Wire RuntimeEngine
 	engine := runtime.NewRuntimeEngine(a.logger, def, a.stateStore, chaos, vp, clock)
 
 	// 4. Wire HTTPServer
-	server := adapterHTTP.NewHTTPServer(a.logger, a.systemStore, engine)
+	server := runtime.NewHTTPServer(a.logger, a.systemStore, engine)
 
 	// 5. Start Server in a Goroutine
 	serverErrChan := make(chan error, 1)
