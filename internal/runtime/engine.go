@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/generator"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 )
 
 // RuntimeEngine is the core executor that matches routes against the OpenAPI definition

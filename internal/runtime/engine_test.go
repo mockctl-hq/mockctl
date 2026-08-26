@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/generator"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 )
 
 // FakeLogger

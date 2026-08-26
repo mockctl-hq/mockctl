@@ -11,9 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/generator"
 	"github.com/mockctl-hq/mockctl/internal/runtime"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 )
 
 // App acts as the Composition Root orchestrating all components.

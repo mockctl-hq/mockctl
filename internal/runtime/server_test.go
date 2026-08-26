@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-
-
 // FakeSystemStore
 type fakeSystemStore struct{}
 

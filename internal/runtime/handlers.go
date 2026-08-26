@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/generator"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 )
 
 // buildFlatPath extracts variables from the Go 1.22 mux and maps them into the path

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mockctl-hq/mockctl/internal/project"
 	"github.com/mockctl-hq/mockctl/internal/data"
+	"github.com/mockctl-hq/mockctl/internal/project"
 	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/spec"
 )
