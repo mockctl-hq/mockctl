@@ -16,6 +16,7 @@ var (
 	bucketAuth      = []byte("auth_bucket")
 	bucketTelemetry = []byte("telemetry_bucket")
 	bucketMetadata  = []byte("metadata_bucket")
+	bucketProjects  = []byte("projects_bucket")
 )
 
 // BBoltSystemStore implements shared.SystemStore using embedded bbolt.
@@ -58,7 +59,7 @@ func newBBoltSystemStore(dbPath string, forceReadOnly bool) (*BBoltSystemStore, 
 	if !readOnly {
 		// Initialize Logical Buckets
 		err = db.Update(func(tx *bbolt.Tx) error {
-			buckets := [][]byte{bucketSettings, bucketAuth, bucketTelemetry, bucketMetadata}
+			buckets := [][]byte{bucketSettings, bucketAuth, bucketTelemetry, bucketMetadata, bucketProjects}
 			for _, b := range buckets {
 				if _, err := tx.CreateBucketIfNotExists(b); err != nil {
 					return err
@@ -154,6 +155,67 @@ func (b *BBoltSystemStore) LogTelemetry(ctx context.Context, event string, data 
 		// Key by timestamp for chronologically ordered retrieval
 		key := []byte(time.Now().UTC().Format(time.RFC3339Nano) + "_" + event)
 		return bucket.Put(key, payload)
+	})
+}
+
+func (b *BBoltSystemStore) SaveProject(ctx context.Context, name string, projectData []byte) error {
+	if b.readOnly {
+		return shared.ErrDatabaseLocked
+	}
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket(bucketProjects)
+		if bucket == nil {
+			return shared.ErrNotFound
+		}
+		return bucket.Put([]byte(name), projectData)
+	})
+}
+
+func (b *BBoltSystemStore) GetProject(ctx context.Context, name string) ([]byte, error) {
+	var val []byte
+	err := b.db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket(bucketProjects)
+		if bucket == nil {
+			return shared.ErrNotFound
+		}
+		v := bucket.Get([]byte(name))
+		if v == nil {
+			return shared.ErrNotFound
+		}
+		val = make([]byte, len(v))
+		copy(val, v)
+		return nil
+	})
+	return val, err
+}
+
+func (b *BBoltSystemStore) ListProjects(ctx context.Context) (map[string][]byte, error) {
+	projects := make(map[string][]byte)
+	err := b.db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket(bucketProjects)
+		if bucket == nil {
+			return shared.ErrNotFound
+		}
+		return bucket.ForEach(func(k, v []byte) error {
+			valCopy := make([]byte, len(v))
+			copy(valCopy, v)
+			projects[string(k)] = valCopy
+			return nil
+		})
+	})
+	return projects, err
+}
+
+func (b *BBoltSystemStore) DeleteProject(ctx context.Context, name string) error {
+	if b.readOnly {
+		return shared.ErrDatabaseLocked
+	}
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket(bucketProjects)
+		if bucket == nil {
+			return shared.ErrNotFound
+		}
+		return bucket.Delete([]byte(name))
 	})
 }
 

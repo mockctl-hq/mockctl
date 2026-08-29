@@ -76,7 +76,7 @@ func (m *MemoryStateStore) List(ctx context.Context, collection string) ([]map[s
 
 	coll, exists := m.store[collection]
 	if !exists {
-		return []map[string]any{}, nil
+		return nil, shared.ErrNotFound
 	}
 
 	var results []map[string]any

@@ -24,4 +24,5 @@ type ChaosEvaluator interface {
 	// or returns an error status code to simulate failure.
 	// Returns an HTTP status code to inject (0 if no error is injected).
 	Evaluate(ctx context.Context) (int, error)
+	UpdateConfig(ctx context.Context, errorRate int, latencyMs int)
 }

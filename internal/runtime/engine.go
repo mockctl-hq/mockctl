@@ -43,6 +43,10 @@ func NewRuntimeEngine(
 	return e
 }
 
+func (e *RuntimeEngine) Chaos() shared.ChaosEvaluator {
+	return e.chaos
+}
+
 func (e *RuntimeEngine) setupRoutes() {
 	if e.definition == nil {
 		return
@@ -79,9 +83,11 @@ func (e *RuntimeEngine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (e *RuntimeEngine) processRequest(w http.ResponseWriter, r *http.Request, endpoint generator.EndpointHandler) {
 	// 1. Chaos Evaluation (PKS-029)
-	if status, err := e.chaos.Evaluate(r.Context()); status != 0 {
-		e.sendError(w, "CHAOS_INJECTED", err.Error(), status)
-		return
+	if e.chaos != nil {
+		if status, err := e.chaos.Evaluate(r.Context()); status != 0 {
+			e.sendError(w, "CHAOS_INJECTED", err.Error(), status)
+			return
+		}
 	}
 
 	// 2. OpenAPI Validation (Stub)

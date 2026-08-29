@@ -25,19 +25,21 @@ type HTTPServer struct {
 	router      *chi.Mux
 	systemStore shared.SystemStore
 	engine      http.Handler
+	manager     ProjectManager
 	logger      shared.Logger
 	httpServer  *http.Server
 	rateLimiter *rate.Limiter
 }
 
 // NewHTTPServer initializes a new HTTPServer with the required middleware pipeline.
-func NewHTTPServer(logger shared.Logger, store shared.SystemStore, engine http.Handler) *HTTPServer {
+func NewHTTPServer(logger shared.Logger, store shared.SystemStore, manager ProjectManager, engine http.Handler) *HTTPServer {
 	r := chi.NewRouter()
 
 	s := &HTTPServer{
 		router:      r,
 		systemStore: store,
 		engine:      engine,
+		manager:     manager,
 		logger:      logger,
 		// EDL-054: Rate limiter (100 req/sec, burst of 10)
 		rateLimiter: rate.NewLimiter(rate.Limit(100), 10),

@@ -42,6 +42,7 @@ type fakeChaosEvaluator struct {
 func (f *fakeChaosEvaluator) Evaluate(ctx context.Context) (int, error) {
 	return f.status, f.err
 }
+func (f *fakeChaosEvaluator) UpdateConfig(ctx context.Context, errorRate int, latencyMs int) {}
 
 // FakeStateStore
 type fakeStateStore struct {
