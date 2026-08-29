@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	
+
 	"github.com/mockctl-hq/mockctl/internal/data"
 	"github.com/mockctl-hq/mockctl/internal/generator"
 	"github.com/mockctl-hq/mockctl/internal/project"
@@ -53,19 +53,19 @@ func (a *App) CreateProject(ctx context.Context, name string, payload []byte) er
 func (a *App) compileEngine(ctx context.Context, proj project.Project, specModel *spec.SpecModel) (*runtime.RuntimeEngine, error) {
 	// Setup dependencies
 	vp := data.NewFakeValueProvider()
-	
+
 	// Create chaos evaluator (stub for now, needs real one if available)
 	var chaos shared.ChaosEvaluator // TODO: inject fake or real
-	
+
 	gen := generator.NewMockGenerator(a.logger, vp)
-	
+
 	def, err := gen.Generate(ctx, specModel, &proj.Workspace)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	clock := shared.NewRealClock()
-	
+
 	engine := runtime.NewRuntimeEngine(a.logger, def, a.stateStore, chaos, vp, clock)
 	return engine, nil
 }
@@ -75,7 +75,7 @@ func (a *App) ListProjects(ctx context.Context) (map[string]map[string]any, erro
 	if err != nil {
 		return nil, err
 	}
-	
+
 	result := make(map[string]map[string]any)
 	for name := range projects {
 		result[name] = map[string]any{"status": "active"} // Simplistic summary
@@ -184,7 +184,7 @@ func (a *App) UpdateChaos(ctx context.Context, projectName string, errorRate int
 	if engine == nil {
 		return fmt.Errorf("project %s not currently running", projectName)
 	}
-	
+
 	if engine.Chaos() != nil {
 		engine.Chaos().UpdateConfig(ctx, errorRate, latencyMs)
 	}

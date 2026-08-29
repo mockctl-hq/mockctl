@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -19,8 +20,9 @@ func NewOpenAPIParser() *OpenAPIParser {
 }
 
 func (p *OpenAPIParser) ParseFile(ctx context.Context, path string) (*SpecModel, error) {
+	cleanPath := filepath.Clean(path)
 	// Security: YAML Bomb Protection
-	info, err := os.Stat(path)
+	info, err := os.Stat(cleanPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to stat openapi file: %w", err)
 	}
@@ -28,7 +30,7 @@ func (p *OpenAPIParser) ParseFile(ctx context.Context, path string) (*SpecModel,
 		return nil, fmt.Errorf("openapi file exceeds maximum allowed size of 50MB")
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(cleanPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}

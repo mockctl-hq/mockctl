@@ -12,7 +12,7 @@ type ProjectManager interface {
 	CreateProject(ctx context.Context, name string, fileStream []byte) error
 	ListProjects(ctx context.Context) (map[string]map[string]any, error)
 	DeleteProject(ctx context.Context, name string) error
-	
+
 	AddEndpoint(ctx context.Context, projectName string, endpointJSON []byte) error
 	SetOverrides(ctx context.Context, projectName string, overridesJSON []byte) error
 	ResetState(ctx context.Context, projectName string) error
@@ -55,7 +55,7 @@ func (g *ProjectGateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	
+
 	projectName := pathParts[0]
 
 	// Task 2.3: RWMutex Lock contention fix (Read lock only to copy pointer)

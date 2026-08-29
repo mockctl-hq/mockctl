@@ -16,11 +16,11 @@ func (s *HTTPServer) setupAdminRoutes() {
 		r.Use(s.adminSecurityMiddleware)
 
 		r.Get("/health", s.handleHealth)
-		
+
 		r.Route("/projects", func(pr chi.Router) {
 			pr.Get("/", s.handleListProjects)
 			pr.Post("/", s.handleCreateProject)
-			
+
 			pr.Route("/{projectName}", func(pnr chi.Router) {
 				pnr.Delete("/", s.handleDeleteProject)
 				pnr.Post("/endpoints", s.handleAddEndpoint)

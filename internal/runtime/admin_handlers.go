@@ -14,7 +14,7 @@ var slugRegex = regexp.MustCompile(`^[a-z0-9-]+$`)
 func (s *HTTPServer) sendSuccess(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"success": true,
 		"data":    data,
 	})
@@ -30,6 +30,9 @@ func (s *HTTPServer) handleListProjects(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *HTTPServer) handleCreateProject(w http.ResponseWriter, r *http.Request) {
+	// Restrict payload to 10MB to prevent memory exhaustion (G120)
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+
 	// Task 3.1 & Phase 4 Concurrency Fix: Parse multipart stream efficiently
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		s.sendAdminError(w, "BAD_REQUEST", "Failed to parse multipart form", http.StatusBadRequest)
@@ -47,7 +50,7 @@ func (s *HTTPServer) handleCreateProject(w http.ResponseWriter, r *http.Request)
 		s.sendAdminError(w, "BAD_REQUEST", "Missing spec file", http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
@@ -113,7 +116,7 @@ func (s *HTTPServer) handleResetState(w http.ResponseWriter, r *http.Request) {
 
 func (s *HTTPServer) handleUpdateChaos(w http.ResponseWriter, r *http.Request) {
 	projectName := chi.URLParam(r, "projectName")
-	
+
 	var req struct {
 		ErrorRate int `json:"error_rate"`
 		LatencyMs int `json:"latency_ms"`

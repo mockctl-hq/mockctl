@@ -30,8 +30,6 @@ type App struct {
 // Ensure App implements ProjectManager
 var _ runtime.ProjectManager = (*App)(nil)
 
-
-
 // StartDaemon initializes and starts the Mock:ctl master daemon.
 func StartDaemon(ctx context.Context, port int) error {
 	// Task 1.4 (TUI-Safe & Docker-Safe Logs)
@@ -52,7 +50,7 @@ func StartDaemon(ctx context.Context, port int) error {
 	if err != nil {
 		return fmt.Errorf("failed to open system database: %w", err)
 	}
-	defer systemStore.Close(ctx)
+	defer func() { _ = systemStore.Close(ctx) }()
 
 	// 1. Generate Admin Token (Secure 32-byte hex)
 	tokenBytes := make([]byte, 32)
@@ -67,12 +65,12 @@ func StartDaemon(ctx context.Context, port int) error {
 	fmt.Printf("ADMIN TOKEN: %s\n", adminToken)
 	fmt.Printf("======================================================\n\n")
 	logger.Info("Admin Access Token Generated and Saved")
-	
+
 	tokenFile := filepath.Join(mockctlDir, "admin.token")
 	if err := os.WriteFile(tokenFile, []byte(adminToken), 0600); err != nil {
 		return fmt.Errorf("failed to write admin.token: %w", err)
 	}
-	defer os.Remove(tokenFile) // cleanup on exit
+	defer func() { _ = os.Remove(tokenFile) }() // cleanup on exit
 
 	// Task 2.2: ProjectGateway Router
 	gateway := runtime.NewProjectGateway()
@@ -116,7 +114,7 @@ func StartDaemon(ctx context.Context, port int) error {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			logger.Error("HTTP Server forced to shutdown", err)
 		}
-		
+
 		// Flush all active crud data if needed here
 
 		logger.Info("Graceful shutdown completed successfully.")
@@ -126,7 +124,10 @@ func StartDaemon(ctx context.Context, port int) error {
 
 // consoleLogger is a simple stdout logger
 type consoleLogger struct{}
+
 func (l *consoleLogger) Info(msg string, args ...any) { fmt.Printf("[INFO] %s %v\n", msg, args) }
 func (l *consoleLogger) Warn(msg string, args ...any) { fmt.Printf("[WARN] %s %v\n", msg, args) }
-func (l *consoleLogger) Error(msg string, err error, args ...any) { fmt.Printf("[ERROR] %s: %v %v\n", msg, err, args) }
+func (l *consoleLogger) Error(msg string, err error, args ...any) {
+	fmt.Printf("[ERROR] %s: %v %v\n", msg, err, args)
+}
 func (l *consoleLogger) Debug(msg string, args ...any) { fmt.Printf("[DEBUG] %s %v\n", msg, args) }
