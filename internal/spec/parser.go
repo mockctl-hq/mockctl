@@ -28,13 +28,22 @@ func (p *OpenAPIParser) ParseFile(ctx context.Context, path string) (*SpecModel,
 		return nil, fmt.Errorf("openapi file exceeds maximum allowed size of 50MB")
 	}
 
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+	return p.ParseData(ctx, data)
+}
+
+func (p *OpenAPIParser) ParseData(ctx context.Context, data []byte) (*SpecModel, error) {
+
 	// Security: SSRF & LFI Prevention
 	loader := openapi3.NewSwaggerLoader()
 	loader.IsExternalRefsAllowed = false
 
-	doc, err := loader.LoadSwaggerFromFile(path)
+	doc, err := loader.LoadSwaggerFromData(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse openapi file: %w", err)
+		return nil, fmt.Errorf("failed to parse openapi data: %w", err)
 	}
 
 	// Validate the document

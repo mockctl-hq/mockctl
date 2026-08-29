@@ -12,10 +12,10 @@ import (
 
 type MockGenerator struct {
 	logger   shared.Logger
-	provider data.ValueProvider
+	provider shared.ValueProvider
 }
 
-func NewMockGenerator(l shared.Logger, p data.ValueProvider) *MockGenerator {
+func NewMockGenerator(l shared.Logger, p shared.ValueProvider) *MockGenerator {
 	return &MockGenerator{logger: l, provider: p}
 }
 
@@ -31,7 +31,8 @@ func (g *MockGenerator) Generate(ctx context.Context, model *spec.SpecModel, wsC
 	builder := data.NewDefaultPayloadBuilder(g.provider)
 
 	for _, route := range model.Routes {
-		handler, exists := def.Endpoints[route.Path]
+		id := route.Method + " " + route.Path
+		handler, exists := def.Endpoints[id]
 		if !exists {
 			handler = EndpointHandler{
 				Method:    route.Method,
@@ -69,7 +70,7 @@ func (g *MockGenerator) Generate(ctx context.Context, model *spec.SpecModel, wsC
 			Body:    body,
 		}
 
-		def.Endpoints[route.Path] = handler
+		def.Endpoints[id] = handler
 	}
 
 	return def, nil

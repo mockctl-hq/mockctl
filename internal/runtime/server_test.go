@@ -19,6 +19,10 @@ func (f *fakeSystemStore) GetAuthToken(ctx context.Context) (string, error) {
 func (f *fakeSystemStore) LogTelemetry(ctx context.Context, event string, data map[string]any) error {
 	return nil
 }
+func (f *fakeSystemStore) SaveProject(ctx context.Context, name string, projectData []byte) error { return nil }
+func (f *fakeSystemStore) GetProject(ctx context.Context, name string) ([]byte, error) { return nil, nil }
+func (f *fakeSystemStore) ListProjects(ctx context.Context) (map[string][]byte, error) { return nil, nil }
+func (f *fakeSystemStore) DeleteProject(ctx context.Context, name string) error { return nil }
 func (f *fakeSystemStore) Close(ctx context.Context) error { return nil }
 
 // FakeEngine
@@ -29,8 +33,18 @@ func (f *fakeEngine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("mocked"))
 }
 
+// FakeProjectManager
+type fakeProjectManager struct{}
+func (f *fakeProjectManager) CreateProject(ctx context.Context, name string, payload []byte) error { return nil }
+func (f *fakeProjectManager) ListProjects(ctx context.Context) (map[string]map[string]any, error) { return nil, nil }
+func (f *fakeProjectManager) DeleteProject(ctx context.Context, name string) error { return nil }
+func (f *fakeProjectManager) AddEndpoint(ctx context.Context, projectName string, endpointJSON []byte) error { return nil }
+func (f *fakeProjectManager) SetOverrides(ctx context.Context, projectName string, overridesJSON []byte) error { return nil }
+func (f *fakeProjectManager) ResetState(ctx context.Context, projectName string) error { return nil }
+func (f *fakeProjectManager) UpdateChaos(ctx context.Context, projectName string, errorRate int, latencyMs int) error { return nil }
+
 func TestHTTPServer_AdminAuth(t *testing.T) {
-	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeEngine{})
+	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeProjectManager{}, &fakeEngine{})
 
 	// Test 1: No Auth Header
 	req := httptest.NewRequest(http.MethodGet, "/__mockctl/health", nil)
@@ -78,7 +92,7 @@ func TestHTTPServer_AdminAuth(t *testing.T) {
 }
 
 func TestHTTPServer_LocalhostBinding(t *testing.T) {
-	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeEngine{})
+	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeProjectManager{}, &fakeEngine{})
 
 	req := httptest.NewRequest(http.MethodGet, "/__mockctl/health", nil)
 	req.RemoteAddr = "192.168.1.5:12345" // Not localhost

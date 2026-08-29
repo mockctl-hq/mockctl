@@ -4,14 +4,9 @@ import (
 	"context"
 
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/spec"
 )
-
-type ValueProvider interface {
-	GenerateString(format string) string
-	GenerateInt(min, max int) int
-	GenerateBoolean() bool
-}
 
 type PayloadBuilder interface {
 	BuildFromSchema(ctx context.Context, schemaRef any) (any, error)
@@ -23,7 +18,11 @@ func NewFakeValueProvider() *FakeValueProvider {
 	return &FakeValueProvider{}
 }
 
-func (p *FakeValueProvider) GenerateString(format string) string {
+func (p *FakeValueProvider) GenerateUUID(ctx context.Context) string {
+	return gofakeit.UUID()
+}
+
+func (p *FakeValueProvider) GenerateString(ctx context.Context, format string) string {
 	switch format {
 	case "uuid":
 		return gofakeit.UUID()
@@ -40,22 +39,22 @@ func (p *FakeValueProvider) GenerateString(format string) string {
 	}
 }
 
-func (p *FakeValueProvider) GenerateInt(min, max int) int {
+func (p *FakeValueProvider) GenerateInt(ctx context.Context, min, max int) int {
 	if min >= max {
 		return min
 	}
 	return gofakeit.Number(min, max)
 }
 
-func (p *FakeValueProvider) GenerateBoolean() bool {
+func (p *FakeValueProvider) GenerateBoolean(ctx context.Context) bool {
 	return gofakeit.Bool()
 }
 
 type DefaultPayloadBuilder struct {
-	provider ValueProvider
+	provider shared.ValueProvider
 }
 
-func NewDefaultPayloadBuilder(provider ValueProvider) *DefaultPayloadBuilder {
+func NewDefaultPayloadBuilder(provider shared.ValueProvider) *DefaultPayloadBuilder {
 	return &DefaultPayloadBuilder{provider: provider}
 }
 
@@ -69,10 +68,10 @@ func (b *DefaultPayloadBuilder) BuildFromSchema(ctx context.Context, schemaRef a
 		return nil, nil
 	}
 
-	return b.build(normSchema)
+	return b.build(ctx, normSchema)
 }
 
-func (b *DefaultPayloadBuilder) build(s *spec.NormalizedSchema) (any, error) {
+func (b *DefaultPayloadBuilder) build(ctx context.Context, s *spec.NormalizedSchema) (any, error) {
 	if s == nil {
 		return nil, nil
 	}
@@ -89,22 +88,22 @@ func (b *DefaultPayloadBuilder) build(s *spec.NormalizedSchema) (any, error) {
 
 	// Priority 3: Polymorphic merging (simplistic pick first)
 	if len(s.OneOf) > 0 {
-		return b.build(s.OneOf[0])
+		return b.build(ctx, s.OneOf[0])
 	}
 	if len(s.AnyOf) > 0 {
-		return b.build(s.AnyOf[0])
+		return b.build(ctx, s.AnyOf[0])
 	}
 
 	switch s.Type {
 	case "string":
-		return b.provider.GenerateString(s.Format), nil
+		return b.provider.GenerateString(ctx, s.Format), nil
 	case "integer", "number":
-		return b.provider.GenerateInt(1, 1000), nil
+		return b.provider.GenerateInt(ctx, 1, 1000), nil
 	case "boolean":
-		return b.provider.GenerateBoolean(), nil
+		return b.provider.GenerateBoolean(ctx), nil
 	case "array":
 		if s.Items != nil {
-			item, err := b.build(s.Items)
+			item, err := b.build(ctx, s.Items)
 			if err != nil {
 				return nil, err
 			}
@@ -117,7 +116,7 @@ func (b *DefaultPayloadBuilder) build(s *spec.NormalizedSchema) (any, error) {
 		if len(s.Properties) > 0 {
 			obj := make(map[string]any)
 			for k, v := range s.Properties {
-				val, err := b.build(v)
+				val, err := b.build(ctx, v)
 				if err != nil {
 					return nil, err
 				}
@@ -126,7 +125,7 @@ func (b *DefaultPayloadBuilder) build(s *spec.NormalizedSchema) (any, error) {
 			// Merge allOf properties
 			for _, allOfSchema := range s.AllOf {
 				if allOfSchema != nil {
-					allOfVal, err := b.build(allOfSchema)
+					allOfVal, err := b.build(ctx, allOfSchema)
 					if err == nil {
 						if allOfMap, ok := allOfVal.(map[string]any); ok {
 							for k, v := range allOfMap {

@@ -29,3 +29,4 @@ frontend/.dart_tool/
 frontend/.packages
 frontend/.pub-cache/
 frontend/pubspec.lock
+mockctl

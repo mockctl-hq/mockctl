@@ -3,6 +3,7 @@ package runtime
 import (
 	"crypto/subtle"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -15,7 +16,19 @@ func (s *HTTPServer) setupAdminRoutes() {
 		r.Use(s.adminSecurityMiddleware)
 
 		r.Get("/health", s.handleHealth)
-		// TODO: Add other admin API routes (e.g., /config, /logs)
+		
+		r.Route("/projects", func(pr chi.Router) {
+			pr.Get("/", s.handleListProjects)
+			pr.Post("/", s.handleCreateProject)
+			
+			pr.Route("/{projectName}", func(pnr chi.Router) {
+				pnr.Delete("/", s.handleDeleteProject)
+				pnr.Post("/endpoints", s.handleAddEndpoint)
+				pnr.Post("/overrides", s.handleSetOverrides)
+				pnr.Post("/state/reset", s.handleResetState)
+				pnr.Patch("/chaos", s.handleUpdateChaos)
+			})
+		})
 	})
 }
 
@@ -42,7 +55,8 @@ func (s *HTTPServer) adminSecurityMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		token := strings.TrimPrefix(authHeader, "Bearer ")
+		token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+		token = strings.Trim(token, `"'`)
 		expectedToken, err := s.systemStore.GetAuthToken(r.Context())
 		if err != nil || expectedToken == "" {
 			s.sendAdminError(w, "UNAUTHORIZED", "Admin token not configured", http.StatusUnauthorized)
@@ -51,14 +65,15 @@ func (s *HTTPServer) adminSecurityMiddleware(next http.Handler) http.Handler {
 
 		// Security Rule (PKS-028): Constant-Time Comparison
 		if subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) != 1 {
-			s.sendAdminError(w, "UNAUTHORIZED", "Invalid admin token", http.StatusUnauthorized)
+			s.sendAdminError(w, "UNAUTHORIZED", fmt.Sprintf("Invalid admin token. Received: '%s', Expected: '%s'", token, expectedToken), http.StatusUnauthorized)
 			return
 		}
 
 		// 4. Content-Type Validation for Mutations
 		if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
-			if r.Header.Get("Content-Type") != "application/json" {
-				s.sendAdminError(w, "UNSUPPORTED_MEDIA_TYPE", "Content-Type must be application/json", http.StatusUnsupportedMediaType)
+			contentType := r.Header.Get("Content-Type")
+			if !strings.HasPrefix(contentType, "application/json") && !strings.HasPrefix(contentType, "multipart/form-data") {
+				s.sendAdminError(w, "UNSUPPORTED_MEDIA_TYPE", "Content-Type must be application/json or multipart/form-data", http.StatusUnsupportedMediaType)
 				return
 			}
 		}
