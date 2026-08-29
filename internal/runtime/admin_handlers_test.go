@@ -11,7 +11,7 @@ func TestAdminHandlers_ListProjects(t *testing.T) {
 	store := NewMockSystemStore()
 	store.AuthToken = "test"
 	manager := NewMockProjectManager()
-	
+
 	// Pre-populate some projects in the manager
 	manager.Projects["proj1"] = map[string]any{"status": "active"}
 	manager.Projects["proj2"] = map[string]any{"status": "active"}

@@ -2,16 +2,16 @@ package app
 
 import (
 	"context"
-	"testing"
 	"github.com/mockctl-hq/mockctl/internal/runtime"
 	"github.com/mockctl-hq/mockctl/internal/shared"
+	"testing"
 )
 
 // MockSystemStore implements shared.SystemStore for testing.
 type MockSystemStore struct {
-	Settings map[string]string
+	Settings  map[string]string
 	AuthToken string
-	Projects map[string][]byte
+	Projects  map[string][]byte
 }
 
 func NewMockSystemStore() *MockSystemStore {
@@ -74,11 +74,12 @@ func (m *MockSystemStore) Close(ctx context.Context) error {
 	return nil
 }
 
-type MockLogger struct {}
-func (m *MockLogger) Info(msg string, args ...any) {}
+type MockLogger struct{}
+
+func (m *MockLogger) Info(msg string, args ...any)             {}
 func (m *MockLogger) Error(msg string, err error, args ...any) {}
-func (m *MockLogger) Debug(msg string, args ...any) {}
-func (m *MockLogger) Warn(msg string, args ...any) {}
+func (m *MockLogger) Debug(msg string, args ...any)            {}
+func (m *MockLogger) Warn(msg string, args ...any)             {}
 
 func TestApp_Initialization(t *testing.T) {
 	app := &App{
@@ -87,8 +88,5 @@ func TestApp_Initialization(t *testing.T) {
 		gateway:     runtime.NewProjectGateway(),
 	}
 
-	var pm runtime.ProjectManager = app
-	if pm == nil {
-		t.Error("App does not implement ProjectManager")
-	}
+	var _ runtime.ProjectManager = app
 }

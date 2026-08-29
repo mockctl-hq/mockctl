@@ -2,14 +2,14 @@ package app
 
 import (
 	"context"
-	"testing"
 	"github.com/mockctl-hq/mockctl/internal/runtime"
+	"testing"
 )
 
 func TestProjectManager_CreateAndListAndGetAndDelete(t *testing.T) {
 	mockStore := NewMockSystemStore()
 	gateway := runtime.NewProjectGateway()
-	
+
 	app := &App{
 		systemStore: mockStore,
 		logger:      &MockLogger{},
@@ -17,7 +17,7 @@ func TestProjectManager_CreateAndListAndGetAndDelete(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	
+
 	// Create Project (requires a valid OpenAPI spec bytes)
 	specBytes := []byte(`
 openapi: 3.0.0
