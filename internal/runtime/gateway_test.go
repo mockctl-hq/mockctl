@@ -36,7 +36,7 @@ func TestProjectGateway_ServeHTTP_NotFound(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/unknown-proj/some/path", nil)
 	w := httptest.NewRecorder()
-	
+
 	g.ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {

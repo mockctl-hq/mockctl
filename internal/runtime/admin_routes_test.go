@@ -10,7 +10,7 @@ func TestAdminRoutes_Middleware(t *testing.T) {
 	logger := &MockLogger{}
 	store := NewMockSystemStore()
 	store.AuthToken = "valid-token"
-	
+
 	manager := NewMockProjectManager()
 	gateway := NewProjectGateway()
 

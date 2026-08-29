@@ -7,9 +7,9 @@ import (
 
 // MockSystemStore implements shared.SystemStore for testing.
 type MockSystemStore struct {
-	Settings map[string]string
+	Settings  map[string]string
 	AuthToken string
-	Projects map[string][]byte
+	Projects  map[string][]byte
 }
 
 func NewMockSystemStore() *MockSystemStore {
@@ -113,8 +113,9 @@ func (m *MockProjectManager) UpdateChaos(ctx context.Context, projectName string
 	return nil
 }
 
-type MockLogger struct {}
-func (m *MockLogger) Info(msg string, args ...any) {}
+type MockLogger struct{}
+
+func (m *MockLogger) Info(msg string, args ...any)             {}
 func (m *MockLogger) Error(msg string, err error, args ...any) {}
-func (m *MockLogger) Debug(msg string, args ...any) {}
-func (m *MockLogger) Warn(msg string, args ...any) {}
+func (m *MockLogger) Debug(msg string, args ...any)            {}
+func (m *MockLogger) Warn(msg string, args ...any)             {}
