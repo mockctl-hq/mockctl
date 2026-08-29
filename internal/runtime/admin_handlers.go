@@ -34,6 +34,7 @@ func (s *HTTPServer) handleCreateProject(w http.ResponseWriter, r *http.Request)
 	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 
 	// Task 3.1 & Phase 4 Concurrency Fix: Parse multipart stream efficiently
+	// #nosec G120 - bounded by MaxBytesReader above
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		s.sendAdminError(w, "BAD_REQUEST", "Failed to parse multipart form", http.StatusBadRequest)
 		return
