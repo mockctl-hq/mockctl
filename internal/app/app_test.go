@@ -2,9 +2,10 @@ package app
 
 import (
 	"context"
+	"testing"
+
 	"github.com/mockctl-hq/mockctl/internal/runtime"
 	"github.com/mockctl-hq/mockctl/internal/shared"
-	"testing"
 )
 
 // MockSystemStore implements shared.SystemStore for testing.

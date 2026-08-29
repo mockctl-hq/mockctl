@@ -2,8 +2,9 @@ package app
 
 import (
 	"context"
-	"github.com/mockctl-hq/mockctl/internal/runtime"
 	"testing"
+
+	"github.com/mockctl-hq/mockctl/internal/runtime"
 )
 
 func TestProjectManager_CreateAndListAndGetAndDelete(t *testing.T) {
