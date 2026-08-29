@@ -42,6 +42,12 @@ func (g *ProjectGateway) SetEngine(projectName string, engine *RuntimeEngine) {
 	g.engines[projectName] = engine
 }
 
+func (g *ProjectGateway) RemoveEngine(projectName string) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	delete(g.engines, projectName)
+}
+
 func (g *ProjectGateway) GetEngine(projectName string) *RuntimeEngine {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
