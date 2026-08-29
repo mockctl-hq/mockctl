@@ -84,6 +84,7 @@ func (a *App) ListProjects(ctx context.Context) (map[string]map[string]any, erro
 }
 
 func (a *App) DeleteProject(ctx context.Context, name string) error {
+	a.gateway.RemoveEngine(name)
 	return a.systemStore.DeleteProject(ctx, name)
 }
 
