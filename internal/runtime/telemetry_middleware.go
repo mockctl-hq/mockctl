@@ -107,13 +107,13 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 
 				// Binary Payload Destruction Fix
 				if utf8.Valid(reqBytes) {
-					baseEvent.RequestBody = unsafe.String(unsafe.SliceData(reqBytes), len(reqBytes)) //nolint:gosec
+					baseEvent.RequestBody = unsafe.String(unsafe.SliceData(reqBytes), len(reqBytes)) // #nosec G103
 				} else if len(reqBytes) > 0 {
 					baseEvent.RequestBody = base64.StdEncoding.EncodeToString(reqBytes)
 				}
 
 				if utf8.Valid(resBytes) {
-					baseEvent.ResponseBody = unsafe.String(unsafe.SliceData(resBytes), len(resBytes)) //nolint:gosec
+					baseEvent.ResponseBody = unsafe.String(unsafe.SliceData(resBytes), len(resBytes)) // #nosec G103
 				} else if len(resBytes) > 0 {
 					baseEvent.ResponseBody = base64.StdEncoding.EncodeToString(resBytes)
 				}
