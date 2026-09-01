@@ -26,27 +26,27 @@ type RequestEvent struct {
 	// SequenceID is monotonically increasing for drop detection.
 	// CRITICAL: Serialized as string to prevent JavaScript precision loss (JS max int is 2^53 - 1).
 	SequenceID string `json:"sequence_id,string"`
-	
-	Timestamp             time.Time           `json:"timestamp"`
-	ProjectNameField      string              `json:"project_name"`
-	HTTPMethod            string              `json:"http_method"`
-	Path                  string              `json:"path"`
-	StatusCode            int                 `json:"status_code"`
-	LatencyMs             int64               `json:"latency_ms"`
-	RequestSizeBytes      int64               `json:"request_size_bytes"`
-	ResponseSizeBytes     int64               `json:"response_size_bytes"`
-	MatchedRouteID        string              `json:"matched_route_id,omitempty"`
-	RequestHeaders        map[string][]string `json:"request_headers,omitempty"`
-	ResponseHeaders       map[string][]string `json:"response_headers,omitempty"`
-	QueryParameters       map[string][]string `json:"query_parameters,omitempty"`
-	RequestBody           string              `json:"request_body,omitempty"`
-	ResponseBody          string              `json:"response_body,omitempty"`
+
+	Timestamp         time.Time           `json:"timestamp"`
+	ProjectNameField  string              `json:"project_name"`
+	HTTPMethod        string              `json:"http_method"`
+	Path              string              `json:"path"`
+	StatusCode        int                 `json:"status_code"`
+	LatencyMs         int64               `json:"latency_ms"`
+	RequestSizeBytes  int64               `json:"request_size_bytes"`
+	ResponseSizeBytes int64               `json:"response_size_bytes"`
+	MatchedRouteID    string              `json:"matched_route_id,omitempty"`
+	RequestHeaders    map[string][]string `json:"request_headers,omitempty"`
+	ResponseHeaders   map[string][]string `json:"response_headers,omitempty"`
+	QueryParameters   map[string][]string `json:"query_parameters,omitempty"`
+	RequestBody       string              `json:"request_body,omitempty"`
+	ResponseBody      string              `json:"response_body,omitempty"`
 
 	// Edge case flags
-	IsHijacked               bool `json:"is_hijacked"`
-	IsRequestBodyTruncated   bool `json:"is_request_body_truncated"`
-	IsResponseBodyTruncated  bool `json:"is_response_body_truncated"`
-	IsRequestBodyIgnored     bool `json:"is_request_body_ignored"`
+	IsHijacked              bool `json:"is_hijacked"`
+	IsRequestBodyTruncated  bool `json:"is_request_body_truncated"`
+	IsResponseBodyTruncated bool `json:"is_response_body_truncated"`
+	IsRequestBodyIgnored    bool `json:"is_request_body_ignored"`
 
 	// Chaos & Panic metrics
 	ChaosLatencyMs     int64  `json:"chaos_latency_ms,omitempty"`

@@ -19,7 +19,7 @@ func (s *HTTPServer) adminCorsPreflightMiddleware(next http.Handler) http.Handle
 			// Fallback (Browsers reject * when Authorization is present, but ok for non-credentialed)
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
-		
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept-Version")
 

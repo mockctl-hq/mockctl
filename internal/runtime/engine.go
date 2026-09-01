@@ -34,7 +34,7 @@ func NewRuntimeEngine(
 	projectName string,
 ) *RuntimeEngine {
 	rawMux := http.NewServeMux()
-	
+
 	e := &RuntimeEngine{
 		logger:        l,
 		definition:    def,
@@ -48,7 +48,7 @@ func NewRuntimeEngine(
 	}
 
 	e.setupRoutes(rawMux)
-	
+
 	// Apply TelemetryMiddleware wrapping the raw mux
 	if broker != nil {
 		e.mux = TelemetryMiddleware(broker, projectName)(rawMux)

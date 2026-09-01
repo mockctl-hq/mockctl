@@ -7,7 +7,7 @@ import (
 )
 
 // sseSemaphore limits the maximum number of concurrent SSE connections (Task 3.2).
-// CRITICAL (Race-Free Concurrency): We use a channel instead of an atomic counter 
+// CRITICAL (Race-Free Concurrency): We use a channel instead of an atomic counter
 // to prevent "Check-Then-Act" race conditions when rejecting connections.
 var sseSemaphore = make(chan struct{}, 5)
 
@@ -24,7 +24,7 @@ func (s *HTTPServer) handleSSEEvents(w http.ResponseWriter, r *http.Request) {
 	select {
 	case sseSemaphore <- struct{}{}:
 		// Semaphore acquired. Defer release.
-		// CRITICAL (Client Disconnect Leak & Reconnect Deadlock Fix): 
+		// CRITICAL (Client Disconnect Leak & Reconnect Deadlock Fix):
 		// MUST release semaphore BEFORE calling Unsubscribe().
 		defer func() { <-sseSemaphore }()
 	default:
@@ -38,7 +38,7 @@ func (s *HTTPServer) handleSSEEvents(w http.ResponseWriter, r *http.Request) {
 	// CRITICAL (CDN Buffering Blackhole): no-transform prevents proxies from buffering
 	w.Header().Set("Cache-Control", "no-cache, no-transform")
 	w.Header().Set("X-Accel-Buffering", "no")
-	
+
 	// Dynamically echo origin for CORS credentials
 	origin := r.Header.Get("Origin")
 	if origin != "" {
@@ -56,7 +56,7 @@ func (s *HTTPServer) handleSSEEvents(w http.ResponseWriter, r *http.Request) {
 	// 4. Subscribe to the EventBroker
 	// Parse ProjectName from query if needed
 	projectName := r.URL.Query().Get("project")
-	
+
 	if s.broker == nil {
 		return // Should never happen unless mock initialization is wrong
 	}
@@ -88,49 +88,61 @@ func (s *HTTPServer) handleSSEEvents(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-ctx.Done():
 			return
-			
+
 		case <-ticker.C:
 			// Heartbeat
 			// CRITICAL (Kernel Syscall Thrash Fix): Set write deadline ONLY inside the slow ticker
 			_ = rc.SetWriteDeadline(time.Now().Add(10 * time.Second))
-			
+
 			_, err := w.Write([]byte("event: heartbeat\ndata: {}\n\n"))
 			if err != nil {
 				return // Client disconnected
 			}
 			f.Flush()
-			
+
 		case msg, ok := <-ch:
 			// CRITICAL (CPU Spike Prevention): Check channel close
 			if !ok {
-				return 
+				return
 			}
 
 			// Format SSE Envelope
 			eventType := msg.Event.EventType()
-			
+
 			// Build event block
 			// envelope pattern: data: {"success":true,"data":...}
 			// But msg.Payload is already just the data object itself (like RequestEvent).
 			// PKS-027 mandates standard envelope. We need to wrap it.
-			
+
 			// We can write it in parts to avoid allocations:
-			w.Write([]byte("event: "))
-			w.Write([]byte(eventType))
-			w.Write([]byte("\ndata: {\"success\":true,\"data\":"))
-			
+			if _, err := w.Write([]byte("event: ")); err != nil {
+				return
+			}
+			if _, err := w.Write([]byte(eventType)); err != nil {
+				return
+			}
+			if _, err := w.Write([]byte("\ndata: {\"success\":true,\"data\":")); err != nil {
+				return
+			}
+
 			if msg.Payload != nil {
-				w.Write(msg.Payload.Buffer.Bytes())
+				if _, err := w.Write(msg.Payload.Buffer.Bytes()); err != nil {
+					return
+				}
 			} else {
 				// Fallback if payload missing
 				payloadBytes, _ := json.Marshal(msg.Event)
-				w.Write(payloadBytes)
+				if _, err := w.Write(payloadBytes); err != nil {
+					return
+				}
 			}
-			
-			w.Write([]byte("}\n\n"))
-			
+
+			if _, err := w.Write([]byte("}\n\n")); err != nil {
+				return
+			}
+
 			f.Flush()
-			
+
 			// CRITICAL: Decref payload
 			if msg.Payload != nil {
 				msg.Payload.Decref()

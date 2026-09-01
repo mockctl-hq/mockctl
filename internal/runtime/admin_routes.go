@@ -14,7 +14,7 @@ func (s *HTTPServer) setupAdminRoutes() {
 		r.Use(s.adminSecurityMiddleware)
 
 		r.Get("/health", s.handleHealth)
-		
+
 		// Task 3.2: Map GET /__mockctl/events to handleSSEEvents
 		r.Get("/events", s.handleSSEEvents)
 

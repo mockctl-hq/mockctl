@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-
 )
 
 func TestInterceptorResponseWriter(t *testing.T) {
@@ -25,7 +24,7 @@ func TestInterceptorResponseWriter(t *testing.T) {
 			limit:          1024,
 		}
 
-		interceptor.Write([]byte("hello"))
+		_, _ = interceptor.Write([]byte("hello"))
 
 		if !interceptor.wroteHeader {
 			t.Errorf("Expected wroteHeader to be true")
@@ -51,7 +50,7 @@ func TestInterceptorResponseWriter(t *testing.T) {
 		}
 
 		interceptor.WriteHeader(http.StatusContinue) // 100
-		
+
 		if interceptor.wroteHeader {
 			t.Errorf("Expected wroteHeader to be false after 1xx response")
 		}
@@ -65,7 +64,7 @@ func TestInterceptorResponseWriter(t *testing.T) {
 			t.Errorf("Expected status code 201, got %d", interceptor.statusCode)
 		}
 	})
-	
+
 	t.Run("TeeWriter respects limit", func(t *testing.T) {
 		t.Parallel()
 		rr := httptest.NewRecorder()
@@ -78,7 +77,7 @@ func TestInterceptorResponseWriter(t *testing.T) {
 			limit:          5, // Only buffer first 5 bytes
 		}
 
-		interceptor.Write([]byte("hello world"))
+		_, _ = interceptor.Write([]byte("hello world"))
 
 		if buf.Buffer.String() != "hello" {
 			t.Errorf("Expected buffer to contain 'hello', got '%s'", buf.Buffer.String())
@@ -94,12 +93,12 @@ func TestTeeReadCloser(t *testing.T) {
 
 	t.Run("Reads and respects limit", func(t *testing.T) {
 		t.Parallel()
-		
+
 		buf := AcquireTelemetryBuffer()
 		defer buf.Decref()
 
 		body := io.NopCloser(strings.NewReader("hello world"))
-		
+
 		trc := &teeReadCloser{
 			original: body,
 			buffer:   buf,
@@ -118,7 +117,7 @@ func TestTeeReadCloser(t *testing.T) {
 		if buf.Buffer.String() != "hello" {
 			t.Errorf("Expected telemetry buffer to contain 'hello', got '%s'", buf.Buffer.String())
 		}
-		
+
 		if trc.read != 11 {
 			t.Errorf("Expected bytes read to be 11, got %d", trc.read)
 		}
@@ -126,10 +125,10 @@ func TestTeeReadCloser(t *testing.T) {
 
 	t.Run("Close decreases ref count", func(t *testing.T) {
 		t.Parallel()
-		
+
 		buf := AcquireTelemetryBuffer()
 		body := io.NopCloser(bytes.NewReader(nil))
-		
+
 		trc := &teeReadCloser{
 			original: body,
 			buffer:   buf,
@@ -140,7 +139,7 @@ func TestTeeReadCloser(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to close: %v", err)
 		}
-		
+
 		if buf.refs.Load() != 0 {
 			t.Errorf("Expected refs to be 0 after close, got %d", buf.refs.Load())
 		}

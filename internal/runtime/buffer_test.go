@@ -40,7 +40,7 @@ func TestRefCountedBuffer(t *testing.T) {
 	t.Run("Concurrent AddRef and Decref", func(t *testing.T) {
 		t.Parallel()
 		buf := AcquireTelemetryBuffer()
-		
+
 		var wg sync.WaitGroup
 		concurrency := 100
 
@@ -54,13 +54,13 @@ func TestRefCountedBuffer(t *testing.T) {
 				buf.Decref()
 			}()
 		}
-		
+
 		wg.Wait()
-		
+
 		if buf.refs.Load() != 1 {
 			t.Errorf("Expected refs to be 1 (base ref), got %d", buf.refs.Load())
 		}
-		
+
 		buf.Decref() // Release base ref
 	})
 }

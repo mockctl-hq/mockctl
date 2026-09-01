@@ -50,7 +50,7 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 			// Setup Tee-Reader for Request Body
 			reqBuffer := AcquireTelemetryBuffer()
 			reqBuffer.Buffer.Reset()
-			
+
 			customReadCloser := &teeReadCloser{
 				original: r.Body,
 				buffer:   reqBuffer,
@@ -95,8 +95,10 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 				}
 
 				// Handler Override Leak Fix
-				if r.Body != customReadCloser {
-					customReadCloser.Close()
+				if r.Body != nil {
+					if r.Body != customReadCloser {
+						_ = customReadCloser.Close()
+					}
 				}
 
 				// Extract buffers as zero-allocation strings safely
@@ -105,13 +107,13 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 
 				// Binary Payload Destruction Fix
 				if utf8.Valid(reqBytes) {
-					baseEvent.RequestBody = unsafe.String(unsafe.SliceData(reqBytes), len(reqBytes))
+					baseEvent.RequestBody = unsafe.String(unsafe.SliceData(reqBytes), len(reqBytes)) //nolint:gosec
 				} else if len(reqBytes) > 0 {
 					baseEvent.RequestBody = base64.StdEncoding.EncodeToString(reqBytes)
 				}
 
 				if utf8.Valid(resBytes) {
-					baseEvent.ResponseBody = unsafe.String(unsafe.SliceData(resBytes), len(resBytes))
+					baseEvent.ResponseBody = unsafe.String(unsafe.SliceData(resBytes), len(resBytes)) //nolint:gosec
 				} else if len(resBytes) > 0 {
 					baseEvent.ResponseBody = base64.StdEncoding.EncodeToString(resBytes)
 				}
@@ -153,7 +155,7 @@ func publishEvent(broker EventPublisher, event *RequestEvent) {
 
 	jsonBuf := AcquireTelemetryBuffer()
 	jsonBuf.Buffer.Reset()
-	
+
 	// Synchronous encoding leveraging handler's goroutine
 	err := json.NewEncoder(jsonBuf.Buffer).Encode(event)
 	if err == nil {
@@ -162,7 +164,7 @@ func publishEvent(broker EventPublisher, event *RequestEvent) {
 		if len(b) > 0 && b[len(b)-1] == '\n' {
 			jsonBuf.Buffer.Truncate(len(b) - 1)
 		}
-		
+
 		// jsonBuf base count (ref=1) is passed to Publish
 		// It will be decref'd by the broker when appropriate
 		broker.Publish(event, jsonBuf)

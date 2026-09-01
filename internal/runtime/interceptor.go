@@ -99,7 +99,7 @@ func (w *interceptorResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error
 	if !ok {
 		return nil, nil, http.ErrNotSupported
 	}
-	
+
 	conn, rw, err := h.Hijack()
 	if err == nil {
 		w.isHijacked = true

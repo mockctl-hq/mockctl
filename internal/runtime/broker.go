@@ -102,7 +102,7 @@ func (b *EventBroker) distributor() {
 
 			// AddRef for all active subscribers
 			if msg.Payload != nil {
-				msg.Payload.AddRef(int32(len(activeSubs)))
+				msg.Payload.AddRef(int32(len(activeSubs))) //nolint:gosec
 			}
 
 			for _, sub := range activeSubs {

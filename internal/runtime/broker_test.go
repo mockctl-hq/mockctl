@@ -4,7 +4,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
 )
 
 func TestEventBroker(t *testing.T) {
@@ -17,13 +16,13 @@ func TestEventBroker(t *testing.T) {
 
 		ch1 := broker.Subscribe(FilterOptions{ProjectName: "test-proj"})
 		ch2 := broker.Subscribe(FilterOptions{ProjectName: "other-proj"})
-		
+
 		// Let the subscriber loop register them
 		time.Sleep(10 * time.Millisecond)
 
 		var wg sync.WaitGroup
 		concurrency := 100
-		
+
 		wg.Add(concurrency)
 		for i := 0; i < concurrency; i++ {
 			go func(id int) {
@@ -34,13 +33,13 @@ func TestEventBroker(t *testing.T) {
 				broker.Publish(event, buf)
 			}(i)
 		}
-		
+
 		wg.Wait()
 
 		// Drain ch1 and count
 		count := 0
 		timeout := time.After(500 * time.Millisecond)
-		
+
 	drainLoop:
 		for {
 			select {
@@ -67,7 +66,7 @@ func TestEventBroker(t *testing.T) {
 			t.Errorf("ch2 should not receive messages for test-proj")
 		default:
 		}
-		
+
 		broker.Unsubscribe(ch1)
 		broker.Unsubscribe(ch2)
 	})
@@ -81,7 +80,7 @@ func TestEventBroker(t *testing.T) {
 		ch := broker.Subscribe(FilterOptions{ProjectName: "test-proj"})
 		time.Sleep(10 * time.Millisecond)
 
-		// Publish 105 messages. 
+		// Publish 105 messages.
 		// Subscriber channel capacity is 100.
 		// The oldest 5 messages should be evicted.
 		for i := 0; i < 105; i++ {
@@ -100,7 +99,7 @@ func TestEventBroker(t *testing.T) {
 		// Drain and verify we only have 100 messages, and they are the LATEST ones
 		count := 0
 		timeout := time.After(100 * time.Millisecond)
-		
+
 		for {
 			select {
 			case msg := <-ch:
@@ -116,21 +115,21 @@ func TestEventBroker(t *testing.T) {
 		if count != 100 {
 			t.Errorf("Expected exactly 100 messages to be retained after eviction, got %d", count)
 		}
-		
+
 		broker.Unsubscribe(ch)
 	})
 
 	t.Run("Stop explicitly drains inputChan", func(t *testing.T) {
 		t.Parallel()
 		broker := NewEventBroker()
-		
+
 		buf := AcquireTelemetryBuffer()
 		event := &RequestEvent{ProjectNameField: "test-proj"}
 		broker.Publish(event, buf)
 
 		// Stop immediately, the background goroutine should drain the inputChan
 		broker.Stop()
-		
+
 		// If it drained properly, inputChan should be empty
 		if len(broker.inputChan) != 0 {
 			t.Errorf("Expected inputChan to be drained, got %d", len(broker.inputChan))

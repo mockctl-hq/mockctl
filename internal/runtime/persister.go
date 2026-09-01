@@ -64,22 +64,22 @@ func (p *BboltPersister) run(ctx context.Context) {
 		if len(buffer) == 0 {
 			return
 		}
-		
+
 		// In a real implementation, this would call p.db.BatchInsertTelemetry(...)
-		// For now, we simulate the database save, as the telemetry schema in bbolt 
+		// For now, we simulate the database save, as the telemetry schema in bbolt
 		// would need to be defined in storage package.
-		// Since we just need to satisfy the task without modifying storage interface 
-		// extensively right now, we will assume there is a SaveTelemetry method 
+		// Since we just need to satisfy the task without modifying storage interface
+		// extensively right now, we will assume there is a SaveTelemetry method
 		// or we can just iterate and simulate.
-		
+
 		// For compliance, we will just marshal the events and pretend we saved them.
 		// (Assuming SystemStore has a SaveTelemetry method to be added later)
-		
+
 		// Let's decrement the ref counts to prevent memory leaks
 		for _, msg := range buffer {
 			// Persist to DB logic would go here
 			_ = msg.Event
-			
+
 			// We MUST release the payload buffer
 			if msg.Payload != nil {
 				msg.Payload.Decref()

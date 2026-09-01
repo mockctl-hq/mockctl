@@ -78,7 +78,7 @@ func StartDaemon(ctx context.Context, port int) error {
 
 	// Task 1.1: Event Broker (IMP-007)
 	broker := runtime.NewEventBroker()
-	
+
 	// Task 1.5: Bbolt Persister (IMP-007)
 	persister := runtime.NewBboltPersister(broker, systemStore)
 	persister.Start(ctx)
