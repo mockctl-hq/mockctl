@@ -29,10 +29,11 @@ type HTTPServer struct {
 	logger      shared.Logger
 	httpServer  *http.Server
 	rateLimiter *rate.Limiter
+	broker      EventSubscriber
 }
 
 // NewHTTPServer initializes a new HTTPServer with the required middleware pipeline.
-func NewHTTPServer(logger shared.Logger, store shared.SystemStore, manager ProjectManager, engine http.Handler) *HTTPServer {
+func NewHTTPServer(logger shared.Logger, store shared.SystemStore, manager ProjectManager, engine http.Handler, broker EventSubscriber) *HTTPServer {
 	r := chi.NewRouter()
 
 	s := &HTTPServer{
@@ -43,6 +44,7 @@ func NewHTTPServer(logger shared.Logger, store shared.SystemStore, manager Proje
 		logger:      logger,
 		// EDL-054: Rate limiter (100 req/sec, burst of 10)
 		rateLimiter: rate.NewLimiter(rate.Limit(100), 10),
+		broker:      broker,
 	}
 
 	// Strict Middleware Chain (EDL-025, PKS-024)

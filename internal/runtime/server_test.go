@@ -61,7 +61,8 @@ func (f *fakeProjectManager) UpdateChaos(ctx context.Context, projectName string
 }
 
 func TestHTTPServer_AdminAuth(t *testing.T) {
-	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeProjectManager{}, &fakeEngine{})
+	t.Parallel()
+	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeProjectManager{}, &fakeEngine{}, nil)
 
 	// Test 1: No Auth Header
 	req := httptest.NewRequest(http.MethodGet, "/__mockctl/health", nil)
@@ -109,7 +110,8 @@ func TestHTTPServer_AdminAuth(t *testing.T) {
 }
 
 func TestHTTPServer_LocalhostBinding(t *testing.T) {
-	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeProjectManager{}, &fakeEngine{})
+	t.Parallel()
+	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeProjectManager{}, &fakeEngine{}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/__mockctl/health", nil)
 	req.RemoteAddr = "192.168.1.5:12345" // Not localhost

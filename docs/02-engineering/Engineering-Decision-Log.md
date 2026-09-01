@@ -14,7 +14,7 @@
 >  
 > Authority: Engineering Decision Log
 > 
-> Decision Range: EDL-001 → EDL-054
+> Decision Range: EDL-001 → EDL-056
 > 
 > Document Type: Engineering Governance / Decision Record
 > 
@@ -1764,7 +1764,7 @@ Hybrid Storage Architecture
 ✅ Approved
 
 **Statement:**  
-Mock:ctl shall use a two-tier database architecture. Ephemeral mock API state will reside strictly in RAM (`map[string]map[string]any`) guarded by a `sync.RWMutex`. Permanent system configuration, user licensing, and telemetry data will be persisted using `bbolt`, a pure-Go embedded Key-Value store.
+Mock:ctl shall use a two-tier database architecture. Ephemeral mock API state will reside strictly in RAM (`map[string]map[string]any`) guarded by a `sync.RWMutex`. Permanent system configuration, user licensing, and telemetry data will be persisted using `bbolt`, a pure-Go embedded Key-Value store. **Crucially, telemetry data must be persisted asynchronously** via a background worker to prevent disk I/O from blocking the high-throughput Mock HTTP server.
 
 **Reason:**  
 - **Zero-CGO:** Using `bbolt` avoids C-bindings (unlike SQLite), maintaining seamless cross-compilation for Flutter Desktop and Android platforms.
@@ -1863,6 +1863,49 @@ Mock:ctl shall use the official `golang.org/x/time/rate` package (Token Bucket a
 
 ---
 
+## EDL-055 — Real-Time Streaming Protocol
+
+**Decision:**  
+Real-Time Streaming Protocol = Server-Sent Events (SSE)
+
+**Status:**  
+✅ Approved
+
+**Statement:**  
+Mock:ctl shall use Server-Sent Events (SSE) instead of WebSockets or gRPC for real-time telemetry streaming from the Master Daemon to the UI Dashboard.
+
+**Reason:**  
+- **Unidirectional Data Flow:** Telemetry is inherently one-way (Server to Client). WebSockets introduce unnecessary bidirectional overhead.
+- **Native HTTP/2 Support:** SSE works flawlessly over HTTP/2 multiplexing without requiring protocol switching (like WebSocket's `101 Switching Protocols`), making it perfectly suited for Go's native HTTP/2 implementation.
+- **Simplicity:** SSE text formats are natively parseable by standard browser APIs (`EventSource`) without heavy client libraries.
+
+**Alternatives Considered:**
+- WebSockets
+- gRPC Streaming
+
+**Replacement Risk:** Medium
+
+---
+
+## EDL-056 — Telemetry Memory Model
+
+**Decision:**  
+Telemetry Memory Management = Zero-Allocation Pooling
+
+**Status:**  
+✅ Approved
+
+**Statement:**  
+Mock:ctl shall mandate strict Zero-Allocation memory pooling (using `sync.Pool` and `RefCountedBuffer`) for all telemetry data interception, payload reading, and event broadcasting.
+
+**Reason:**  
+- **GC Paralysis Prevention:** At 10,000 req/sec, allocating 1MB request/response bodies on the heap will instantly overwhelm the Go Garbage Collector, causing massive "Stop-The-World" latency spikes that ruin mock API performance.
+- **Memory Safety:** Reference counting ensures memory buffers are safely returned to the pool only when all concurrent Fan-Out subscribers have successfully transmitted or dropped the event.
+
+**Replacement Risk:** High (Tied deeply into the HTTP Interceptor architecture).
+
+---
+
 ## Document Governance
 
 This Engineering Decision Log is the authoritative record of approved engineering decisions for Mock:ctl.
@@ -1892,7 +1935,7 @@ The Engineering Decision Log is maintained as part of the Project Knowledge Syst
 
 **Status:** Active
 
-**Decision Range:** EDL-001 → EDL-054
+**Decision Range:** EDL-001 → EDL-056
 
 **Authority:** Engineering Decision Log
 

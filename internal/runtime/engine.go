@@ -17,7 +17,9 @@ type RuntimeEngine struct {
 	chaos         shared.ChaosEvaluator
 	valueProvider shared.ValueProvider
 	clock         shared.Clock
-	mux           *http.ServeMux
+	broker        EventPublisher
+	projectName   string
+	mux           http.Handler // Changed to http.Handler to hold the wrapped mux
 }
 
 // NewRuntimeEngine creates a new instance of the RuntimeEngine.
@@ -28,7 +30,11 @@ func NewRuntimeEngine(
 	chaos shared.ChaosEvaluator,
 	vp shared.ValueProvider,
 	clk shared.Clock,
+	broker EventPublisher,
+	projectName string,
 ) *RuntimeEngine {
+	rawMux := http.NewServeMux()
+
 	e := &RuntimeEngine{
 		logger:        l,
 		definition:    def,
@@ -36,10 +42,18 @@ func NewRuntimeEngine(
 		chaos:         chaos,
 		valueProvider: vp,
 		clock:         clk,
-		mux:           http.NewServeMux(),
+		broker:        broker,
+		projectName:   projectName,
+		mux:           rawMux,
 	}
 
-	e.setupRoutes()
+	e.setupRoutes(rawMux)
+
+	// Apply TelemetryMiddleware wrapping the raw mux
+	if broker != nil {
+		e.mux = TelemetryMiddleware(broker, projectName)(rawMux)
+	}
+
 	return e
 }
 
@@ -47,7 +61,7 @@ func (e *RuntimeEngine) Chaos() shared.ChaosEvaluator {
 	return e.chaos
 }
 
-func (e *RuntimeEngine) setupRoutes() {
+func (e *RuntimeEngine) setupRoutes(rawMux *http.ServeMux) {
 	if e.definition == nil {
 		return
 	}
@@ -55,7 +69,7 @@ func (e *RuntimeEngine) setupRoutes() {
 	for _, endpoint := range e.definition.Endpoints {
 		pattern := endpoint.Method + " " + endpoint.Path
 		ep := endpoint // Capture for closure
-		e.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		rawMux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 			e.processRequest(w, r, ep)
 		})
 	}

@@ -7,6 +7,8 @@ import (
 )
 
 func TestAdminRoutes_Middleware(t *testing.T) {
+	t.Parallel()
+
 	logger := &MockLogger{}
 	store := NewMockSystemStore()
 	store.AuthToken = "valid-token"
@@ -14,7 +16,7 @@ func TestAdminRoutes_Middleware(t *testing.T) {
 	manager := NewMockProjectManager()
 	gateway := NewProjectGateway()
 
-	server := NewHTTPServer(logger, store, manager, gateway)
+	server := NewHTTPServer(logger, store, manager, gateway, nil)
 
 	// Test 1: Missing Accept-Version
 	req := httptest.NewRequest(http.MethodGet, "/__mockctl/health", nil)

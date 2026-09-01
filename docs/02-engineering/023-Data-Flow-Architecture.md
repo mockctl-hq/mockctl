@@ -333,14 +333,44 @@ Command-Line Flags
 Configuration is resolved sequentially by the Configuration Manager (`internal/config/`).
 
 The finalized configuration object is injected into the Application Core.
-
-Individual subsystems do not independently parse configuration files or environment variables.
-
----
-
-# 🔌 Future Extension Points (Plugin Boundary)
-
-Mock:ctl is designed to support WASM plugins in the future (EDL-046, EDL-047). 
+  
+  Individual subsystems do not independently parse configuration files or environment variables.
+  
+  ---
+  
+  ## 1️⃣1️⃣ Real-Time Telemetry & Observability Flow
+  
+  This flow handles the interception and distribution of live metrics and HTTP events to connected Admin API clients (e.g. Flutter UI) via Server-Sent Events (SSE).
+  
+  ```text
+  Frontend Client Request (Any HTTP Method)
+        ↓
+  HTTP Server (Chi / net/http Middleware)
+        ↓
+  Telemetry Interceptor (Deep Copy / Tee-Reader / Tee-Writer)
+        ↓
+  Event Broker (internal/runtime/) -> Async Fast Fan-Out
+        ↓
+  Connected SSE Subscribers (Admin API)
+        ↓
+  Flutter UI Dashboard
+  ```
+  
+  The HTTP Server intercepts the request and response using specialized zero-copy and deep-copy techniques.
+  
+  Once the downstream Mock Handler completes, the Interceptor synchronously formats a `RequestEvent`.
+  
+  The event is published to a lock-free `EventBroker`.
+  
+  The broker's background distributor immediately fans out the event to all active subscriber channels via `select`.
+  
+  The SSE HTTP Handler pulls from these channels and pushes standard `text/event-stream` payloads to the UI without blocking the core Runtime Engine.
+  
+  ---
+  
+  # 🔌 Future Extension Points (Plugin Boundary)
+  
+  Mock:ctl is designed to support WASM plugins in the future (EDL-046, EDL-047). 
 
 While plugins are not part of the MVP, the data flow architecture establishes a clear boundary for future interception.
 
