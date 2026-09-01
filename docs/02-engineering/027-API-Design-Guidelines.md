@@ -127,8 +127,12 @@ The Admin API strictly adheres to standard REST semantics:
 - **201 Created:** A resource (like a temporary override) was successfully created.
 - **204 No Content:** Request succeeded, but no data needs to be returned.
 - **400 Bad Request:** The client sent invalid parameters (e.g., setting Chaos Level to 150%).
+- **401 Unauthorized:** Missing or invalid Local Auth Token.
+- **403 Forbidden:** The action is not allowed (e.g., Localhost binding violation).
 - **404 Not Found:** Admin route does not exist.
 - **409 Conflict:** The action cannot be performed due to current state (e.g., trying to start a plugin that is already running).
+- **415 Unsupported Media Type:** Client did not send `application/json`.
+- **429 Too Many Requests:** The server is rejecting the request because the rate limit or concurrent connection limit has been exceeded.
 - **500 Internal Server Error:** Mock:ctl encountered an unrecoverable Go panic or internal failure.
 
 ---

@@ -1,11 +1,8 @@
 package runtime
 
 import (
-	"crypto/subtle"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -13,9 +10,13 @@ import (
 // setupAdminRoutes configures the reserved /__mockctl/* namespace.
 func (s *HTTPServer) setupAdminRoutes() {
 	s.router.Route("/__mockctl", func(r chi.Router) {
+		r.Use(s.adminCorsPreflightMiddleware)
 		r.Use(s.adminSecurityMiddleware)
 
 		r.Get("/health", s.handleHealth)
+		
+		// Task 3.2: Map GET /__mockctl/events to handleSSEEvents
+		r.Get("/events", s.handleSSEEvents)
 
 		r.Route("/projects", func(pr chi.Router) {
 			pr.Get("/", s.handleListProjects)
@@ -29,63 +30,6 @@ func (s *HTTPServer) setupAdminRoutes() {
 				pnr.Patch("/chaos", s.handleUpdateChaos)
 			})
 		})
-	})
-}
-
-// adminSecurityMiddleware enforces Localhost binding, Rate Limiting, and Authorization
-func (s *HTTPServer) adminSecurityMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 1. Localhost Binding (Basic check)
-		host := r.RemoteAddr
-		if !strings.HasPrefix(host, "127.0.0.1:") && !strings.HasPrefix(host, "[::1]:") {
-			s.sendAdminError(w, "FORBIDDEN", "Admin API is restricted to localhost", http.StatusForbidden)
-			return
-		}
-
-		// 2. Rate Limiting (EDL-054)
-		if !s.rateLimiter.Allow() {
-			s.sendAdminError(w, "RATE_LIMIT_EXCEEDED", "Admin API rate limit exceeded", http.StatusTooManyRequests)
-			return
-		}
-
-		// 3. Authorization Bearer Token
-		authHeader := r.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			s.sendAdminError(w, "UNAUTHORIZED", "Missing or invalid Authorization header", http.StatusUnauthorized)
-			return
-		}
-
-		token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
-		token = strings.Trim(token, `"'`)
-		expectedToken, err := s.systemStore.GetAuthToken(r.Context())
-		if err != nil || expectedToken == "" {
-			s.sendAdminError(w, "UNAUTHORIZED", "Admin token not configured", http.StatusUnauthorized)
-			return
-		}
-
-		// Security Rule (PKS-028): Constant-Time Comparison
-		if subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) != 1 {
-			s.sendAdminError(w, "UNAUTHORIZED", fmt.Sprintf("Invalid admin token. Received: '%s', Expected: '%s'", token, expectedToken), http.StatusUnauthorized)
-			return
-		}
-
-		// 4. Content-Type Validation for Mutations
-		if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
-			contentType := r.Header.Get("Content-Type")
-			if !strings.HasPrefix(contentType, "application/json") && !strings.HasPrefix(contentType, "multipart/form-data") {
-				s.sendAdminError(w, "UNSUPPORTED_MEDIA_TYPE", "Content-Type must be application/json or multipart/form-data", http.StatusUnsupportedMediaType)
-				return
-			}
-		}
-
-		// Accept-Version & CORS
-		if r.Header.Get("Accept-Version") != "v1" {
-			s.sendAdminError(w, "BAD_REQUEST", "Accept-Version header must be v1", http.StatusBadRequest)
-			return
-		}
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		next.ServeHTTP(w, r)
 	})
 }
 

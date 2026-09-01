@@ -4,9 +4,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
 )
 
 func TestAdminHandlers_ListProjects(t *testing.T) {
+	t.Parallel()
+
 	logger := &MockLogger{}
 	store := NewMockSystemStore()
 	store.AuthToken = "test"
@@ -16,7 +19,7 @@ func TestAdminHandlers_ListProjects(t *testing.T) {
 	manager.Projects["proj1"] = map[string]any{"status": "active"}
 	manager.Projects["proj2"] = map[string]any{"status": "active"}
 
-	server := NewHTTPServer(logger, store, manager, NewProjectGateway())
+	server := NewHTTPServer(logger, store, manager, NewProjectGateway(), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/__mockctl/projects", nil)
 	req.RemoteAddr = "127.0.0.1:1234"
@@ -37,13 +40,15 @@ func TestAdminHandlers_ListProjects(t *testing.T) {
 }
 
 func TestAdminHandlers_DeleteProject(t *testing.T) {
+	t.Parallel()
+
 	logger := &MockLogger{}
 	store := NewMockSystemStore()
 	store.AuthToken = "test"
 	manager := NewMockProjectManager()
 	manager.Projects["proj1"] = map[string]any{"status": "active"}
 
-	server := NewHTTPServer(logger, store, manager, NewProjectGateway())
+	server := NewHTTPServer(logger, store, manager, NewProjectGateway(), nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/__mockctl/projects/proj1", nil)
 	req.RemoteAddr = "127.0.0.1:1234"

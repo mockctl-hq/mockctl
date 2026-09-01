@@ -105,7 +105,7 @@ func TestRuntimeEngine_HandleGetFallbackTemplate(t *testing.T) {
 		},
 	}
 
-	engine := NewRuntimeEngine(&fakeLogger{}, def, newFakeStateStore(), &fakeChaosEvaluator{}, &fakeValueProvider{}, &fakeClock{})
+	engine := NewRuntimeEngine(&fakeLogger{}, def, newFakeStateStore(), &fakeChaosEvaluator{}, &fakeValueProvider{}, &fakeClock{}, nil, "test-project")
 
 	req := httptest.NewRequest(http.MethodGet, "/users/999", nil)
 	rr := httptest.NewRecorder()

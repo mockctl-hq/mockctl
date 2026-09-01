@@ -25,6 +25,7 @@ type App struct {
 	systemStore shared.SystemStore
 	stateStore  shared.StateStore
 	gateway     *runtime.ProjectGateway
+	broker      *runtime.EventBroker
 }
 
 // Ensure App implements ProjectManager
@@ -75,11 +76,23 @@ func StartDaemon(ctx context.Context, port int) error {
 	// Task 2.2: ProjectGateway Router
 	gateway := runtime.NewProjectGateway()
 
+	// Task 1.1: Event Broker (IMP-007)
+	broker := runtime.NewEventBroker()
+	
+	// Task 1.5: Bbolt Persister (IMP-007)
+	persister := runtime.NewBboltPersister(broker, systemStore)
+	persister.Start(ctx)
+
+	// Task 2.4: Metrics Collector (IMP-007)
+	metricsCollector := runtime.NewMetricsCollector(broker)
+	metricsCollector.Start(ctx)
+
 	a := &App{
 		logger:      logger,
 		systemStore: systemStore,
 		stateStore:  storage.NewMemoryStateStore(), // Temporary
 		gateway:     gateway,
+		broker:      broker,
 	}
 
 	// Task 1.3: Non-Blocking Re-hydration
@@ -88,7 +101,7 @@ func StartDaemon(ctx context.Context, port int) error {
 	}
 
 	// Task 2.1: Downward Dependency Flow - Inject App as ProjectManager
-	server := runtime.NewHTTPServer(logger, systemStore, a, gateway)
+	server := runtime.NewHTTPServer(logger, systemStore, a, gateway, broker)
 
 	serverErrChan := make(chan error, 1)
 	go func() {
@@ -110,6 +123,11 @@ func StartDaemon(ctx context.Context, port int) error {
 		// Graceful Shutdown Hang Fix: strict 5 second timeout
 		shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
+
+		// Stop Telemetry Subsystems gracefully
+		metricsCollector.Stop()
+		persister.Stop()
+		broker.Stop()
 
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			logger.Error("HTTP Server forced to shutdown", err)

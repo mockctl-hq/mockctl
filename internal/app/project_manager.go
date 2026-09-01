@@ -66,7 +66,7 @@ func (a *App) compileEngine(ctx context.Context, proj project.Project, specModel
 
 	clock := shared.NewRealClock()
 
-	engine := runtime.NewRuntimeEngine(a.logger, def, a.stateStore, chaos, vp, clock)
+	engine := runtime.NewRuntimeEngine(a.logger, def, a.stateStore, chaos, vp, clock, a.broker, proj.Name)
 	return engine, nil
 }
 
