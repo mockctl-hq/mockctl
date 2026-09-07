@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -79,8 +80,26 @@ func setupLogger() {
 		level = slog.LevelDebug
 	}
 
+	var logWriter *os.File
+	if os.Getenv("MOCKCTL_DOCKER") == "true" {
+		logWriter = os.Stdout
+	} else {
+		home, err := os.UserHomeDir()
+		if err == nil {
+			logPath := filepath.Join(home, ".mockctl", "daemon.log")
+			// #nosec G302 G304 -- logPath is deterministic, and 0600 is used for secure permissions
+			if f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600); err == nil {
+				logWriter = f
+			}
+		}
+	}
+
+	if logWriter == nil {
+		logWriter = os.Stdout
+	}
+
 	// Use JSON format for structured logging
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	handler := slog.NewJSONHandler(logWriter, &slog.HandlerOptions{
 		Level: level,
 	})
 

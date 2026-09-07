@@ -50,6 +50,13 @@ The objectives of this document are to:
 
 ---
 
+# 🏛️ Dual-Mode Architecture (Amended for Dart FFI / Embedded UIs)
+Mock:ctl operates under a strictly defined Dual-Mode Architecture to support both headless CI/CD automation and high-performance, embedded graphical interfaces (TUI and Flutter).
+1. **Headless Server Mode (`mockctl daemon`):** Operates as a traditional background daemon. It binds to a port, holds the DB lock, and exclusively accepts HTTP commands via the `/__mockctl/` Admin API (secured via `admin.token`).
+2. **Embedded UI Mode (`mockctl studio` / Flutter App):** Operates as an embedded engine. The Presentation Layer directly instantiates and interacts with the Application Core (`ProjectManager`, `EventBroker`) in memory via Go imports or Dart FFI. It bypasses the HTTP Admin API entirely for zero-latency execution and acts as the singular owner of the DB lock.
+
+---
+
 # 📌 Scope
 
 This document defines:

@@ -18,6 +18,8 @@ const (
 type Event interface {
 	EventType() EventType
 	ProjectName() string
+	CloneRaw() Event // CRITICAL for raw subscriber isolation
+	Decref()         // Helper to safely decref any contained buffers
 }
 
 // RequestEvent represents a single HTTP request/response cycle intercepted by the TelemetryMiddleware.
@@ -26,6 +28,9 @@ type RequestEvent struct {
 	// SequenceID is monotonically increasing for drop detection.
 	// CRITICAL: Serialized as string to prevent JavaScript precision loss (JS max int is 2^53 - 1).
 	SequenceID string `json:"sequence_id,string"`
+
+	// CRITICAL: To map request_started and request_completed
+	CorrelationID string `json:"correlation_id"`
 
 	Timestamp         time.Time           `json:"timestamp"`
 	ProjectNameField  string              `json:"project_name"`
@@ -39,13 +44,17 @@ type RequestEvent struct {
 	RequestHeaders    map[string][]string `json:"request_headers,omitempty"`
 	ResponseHeaders   map[string][]string `json:"response_headers,omitempty"`
 	QueryParameters   map[string][]string `json:"query_parameters,omitempty"`
-	RequestBody       string              `json:"request_body,omitempty"`
-	ResponseBody      string              `json:"response_body,omitempty"`
+
+	// CRITICAL: These MUST be RefCountedBuffer pointers, NOT strings, for zero-allocation
+	RequestBody  *RefCountedBuffer `json:"-"`
+	ResponseBody *RefCountedBuffer `json:"-"`
 
 	// Edge case flags
 	IsHijacked              bool `json:"is_hijacked"`
 	IsRequestBodyTruncated  bool `json:"is_request_body_truncated"`
 	IsResponseBodyTruncated bool `json:"is_response_body_truncated"`
+	IsRequestBodyBase64     bool `json:"is_request_body_base64"`
+	IsResponseBodyBase64    bool `json:"is_response_body_base64"`
 	IsRequestBodyIgnored    bool `json:"is_request_body_ignored"`
 
 	// Chaos & Panic metrics
@@ -64,6 +73,30 @@ func (e *RequestEvent) ProjectName() string {
 	return e.ProjectNameField
 }
 
+// CloneRaw creates a shallow copy of the struct, preventing data races when fanning out to multiple raw subscribers.
+func (e *RequestEvent) CloneRaw() Event {
+	clone := *e
+	// Buffer pointers are shallow-copied, which is safe because they are RefCounted!
+	// We MUST AddRef them since a new raw subscriber now holds a reference to them.
+	if clone.RequestBody != nil {
+		clone.RequestBody.AddRef(1)
+	}
+	if clone.ResponseBody != nil {
+		clone.ResponseBody.AddRef(1)
+	}
+	return &clone
+}
+
+// Decref safely decrements any buffers if the event is dropped.
+func (e *RequestEvent) Decref() {
+	if e.RequestBody != nil {
+		e.RequestBody.Decref()
+	}
+	if e.ResponseBody != nil {
+		e.ResponseBody.Decref()
+	}
+}
+
 // MetricEvent represents server health metrics periodically broadcast to the dashboard.
 type MetricEvent struct {
 	Timestamp        time.Time `json:"timestamp"`
@@ -75,6 +108,8 @@ type MetricEvent struct {
 
 func (e *MetricEvent) EventType() EventType { return EventTypeMetric }
 func (e *MetricEvent) ProjectName() string  { return e.ProjectNameField }
+func (e *MetricEvent) CloneRaw() Event      { clone := *e; return &clone }
+func (e *MetricEvent) Decref()              {}
 
 // DropWarningEvent is injected by the broker when a slow client drops messages.
 type DropWarningEvent struct {
@@ -85,3 +120,5 @@ type DropWarningEvent struct {
 
 func (e *DropWarningEvent) EventType() EventType { return EventTypeDropWarning }
 func (e *DropWarningEvent) ProjectName() string  { return e.ProjectNameField }
+func (e *DropWarningEvent) CloneRaw() Event      { clone := *e; return &clone }
+func (e *DropWarningEvent) Decref()              {}

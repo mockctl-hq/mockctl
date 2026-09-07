@@ -156,7 +156,7 @@ By default, the `/__mockctl/` endpoints are strictly bound to `127.0.0.1`. Even 
 
 ## 5.2 Local Authorization Token
 To prevent other malicious software running on the user's localhost from hijacking the Admin API (e.g., wiping the database or stealing SaaS tokens), the Mock:ctl binary generates a secure, random `admin.token` file in the `~/.mockctl/` directory on startup. 
-All CLI and Flutter UI requests to `/__mockctl/` MUST include this token as a header: `Authorization: Bearer <token>`. Requests without a valid local token are rejected with `401 Unauthorized`.
+**CRITICAL (Embedded Architecture Exception):** Local graphical interfaces (TUI and Flutter UI) MUST NOT use the `/__mockctl/` HTTP Admin API. They must embed the Application Core directly into memory (via Direct Import or Dart FFI) for zero-latency execution. The HTTP Admin API (`/__mockctl/`) is strictly reserved for Headless Remote Access (e.g., CI/CD pipelines, curl scripts). When accessed remotely, these requests MUST include the token as a header: `Authorization: Bearer <token>`. Requests without a valid local token are rejected with `401 Unauthorized`.
 
 ## 5.3 CORS (Cross-Origin Resource Sharing)
 To support future Web-based SaaS Dashboards that communicate with the local daemon, the Admin API strictly implements the following CORS headers for all `/__mockctl/` routes:

@@ -17,6 +17,7 @@ import (
 	"github.com/mockctl-hq/mockctl/internal/runtime"
 	"github.com/mockctl-hq/mockctl/internal/shared"
 	"github.com/mockctl-hq/mockctl/internal/storage"
+	"go.etcd.io/bbolt"
 )
 
 // App acts as the Composition Root orchestrating all components.
@@ -49,29 +50,36 @@ func StartDaemon(ctx context.Context, port int) error {
 	dbPath := filepath.Join(mockctlDir, "system.db")
 	systemStore, err := storage.NewBBoltSystemStore(dbPath)
 	if err != nil {
+		if errors.Is(err, bbolt.ErrTimeout) {
+			fmt.Println("🚫 Error: Mock:ctl is already running in another terminal. Please close it first.")
+			os.Exit(1)
+		}
 		return fmt.Errorf("failed to open system database: %w", err)
 	}
 	defer func() { _ = systemStore.Close(ctx) }()
 
-	// 1. Generate Admin Token (Secure 32-byte hex)
-	tokenBytes := make([]byte, 32)
-	if _, err := rand.Read(tokenBytes); err != nil {
-		return err
-	}
-	adminToken := hex.EncodeToString(tokenBytes)
-	if err := systemStore.SaveAuthToken(ctx, adminToken); err != nil {
-		return fmt.Errorf("failed to save admin token: %w", err)
-	}
-	fmt.Printf("\n======================================================\n")
-	fmt.Printf("ADMIN TOKEN: %s\n", adminToken)
-	fmt.Printf("======================================================\n\n")
-	logger.Info("Admin Access Token Generated and Saved")
-
+	// Task 1.2: Check for existing Admin Token, generate if missing
 	tokenFile := filepath.Join(mockctlDir, "admin.token")
-	if err := os.WriteFile(tokenFile, []byte(adminToken), 0600); err != nil {
-		return fmt.Errorf("failed to write admin.token: %w", err)
+
+	// #nosec G304 -- tokenFile path is deterministically built from user home directory
+	tokenData, err := os.ReadFile(tokenFile)
+	if err != nil {
+		// Generate Admin Token (Secure 32-byte hex)
+		tokenBytes := make([]byte, 32)
+		if _, err := rand.Read(tokenBytes); err != nil {
+			return err
+		}
+		tokenData = []byte(hex.EncodeToString(tokenBytes))
+		if err := os.WriteFile(tokenFile, tokenData, 0600); err != nil {
+			return fmt.Errorf("failed to write admin.token: %w", err)
+		}
+		logger.Info("Admin Access Token Generated and Saved")
 	}
-	defer func() { _ = os.Remove(tokenFile) }() // cleanup on exit
+
+	// Always sync the token to the DB on startup to prevent drift if system.db was deleted
+	if err := systemStore.SaveAuthToken(ctx, string(tokenData)); err != nil {
+		return fmt.Errorf("failed to sync admin token to db: %w", err)
+	}
 
 	// Task 2.2: ProjectGateway Router
 	gateway := runtime.NewProjectGateway()
@@ -80,7 +88,7 @@ func StartDaemon(ctx context.Context, port int) error {
 	broker := runtime.NewEventBroker()
 
 	// Task 1.5: Bbolt Persister (IMP-007)
-	persister := runtime.NewBboltPersister(broker, systemStore)
+	persister := storage.NewTelemetryPersister(broker, systemStore.DB())
 	persister.Start(ctx)
 
 	// Task 2.4: Metrics Collector (IMP-007)

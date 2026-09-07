@@ -43,13 +43,8 @@ func newBBoltSystemStore(dbPath string, forceReadOnly bool) (*BBoltSystemStore, 
 		db, err = bbolt.Open(dbPath, 0666, &bbolt.Options{ReadOnly: true, Timeout: 1 * time.Second})
 	} else {
 		db, err = bbolt.Open(dbPath, 0600, &bbolt.Options{Timeout: 1 * time.Second})
-		if err != nil {
-			if err == bbolt.ErrTimeout {
-				// PKS-026 Fallback: Another CLI instance holds the lock.
-				readOnly = true
-				db, err = bbolt.Open(dbPath, 0666, &bbolt.Options{ReadOnly: true, Timeout: 1 * time.Second})
-			}
-		}
+		// We return the error directly so the caller can catch bbolt.ErrTimeout
+		// and fail gracefully with a user-friendly message per PKS-026 (Pragmatic Fallback).
 	}
 
 	if err != nil {
@@ -74,6 +69,11 @@ func newBBoltSystemStore(dbPath string, forceReadOnly bool) (*BBoltSystemStore, 
 	}
 
 	return &BBoltSystemStore{db: db, readOnly: readOnly}, nil
+}
+
+// DB returns the underlying bbolt.DB instance.
+func (b *BBoltSystemStore) DB() *bbolt.DB {
+	return b.db
 }
 
 func (b *BBoltSystemStore) GetSetting(ctx context.Context, key string) (string, error) {

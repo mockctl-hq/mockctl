@@ -9,13 +9,14 @@ import (
 func TestEventBroker(t *testing.T) {
 	t.Parallel()
 
-	t.Run("Concurrent Publish and Subscribe", func(t *testing.T) {
+	t.Run("Concurrent Publish and Subscribe Dual-Mode", func(t *testing.T) {
 		t.Parallel()
 		broker := NewEventBroker()
 		defer broker.Stop()
 
-		ch1 := broker.Subscribe(FilterOptions{ProjectName: "test-proj"})
-		ch2 := broker.Subscribe(FilterOptions{ProjectName: "other-proj"})
+		jsonCh := broker.SubscribeJSON(FilterOptions{ProjectName: "test-proj"})
+		rawCh := broker.SubscribeRaw(FilterOptions{ProjectName: "test-proj"})
+		otherCh := broker.SubscribeJSON(FilterOptions{ProjectName: "other-proj"})
 
 		// Let the subscriber loop register them
 		time.Sleep(10 * time.Millisecond)
@@ -36,19 +37,26 @@ func TestEventBroker(t *testing.T) {
 
 		wg.Wait()
 
-		// Drain ch1 and count
-		count := 0
+		// Drain jsonCh
+		jsonCount := 0
+		rawCount := 0
 		timeout := time.After(500 * time.Millisecond)
 
 	drainLoop:
 		for {
 			select {
-			case msg := <-ch1:
-				count++
+			case msg := <-jsonCh:
+				jsonCount++
 				if msg.Payload != nil {
 					msg.Payload.Decref()
 				}
-				if count == concurrency {
+				if jsonCount == concurrency && rawCount == concurrency {
+					break drainLoop
+				}
+			case msg := <-rawCh:
+				rawCount++
+				msg.Decref()
+				if jsonCount == concurrency && rawCount == concurrency {
 					break drainLoop
 				}
 			case <-timeout:
@@ -56,19 +64,23 @@ func TestEventBroker(t *testing.T) {
 			}
 		}
 
-		if count != concurrency {
-			t.Errorf("Expected %d messages in ch1, got %d", concurrency, count)
+		if jsonCount != concurrency {
+			t.Errorf("Expected %d messages in jsonCh, got %d", concurrency, jsonCount)
+		}
+		if rawCount != concurrency {
+			t.Errorf("Expected %d messages in rawCh, got %d", concurrency, rawCount)
 		}
 
-		// Check ch2 for cross-talk
+		// Check otherCh for cross-talk
 		select {
-		case <-ch2:
-			t.Errorf("ch2 should not receive messages for test-proj")
+		case <-otherCh:
+			t.Errorf("otherCh should not receive messages for test-proj")
 		default:
 		}
 
-		broker.Unsubscribe(ch1)
-		broker.Unsubscribe(ch2)
+		broker.UnsubscribeJSON(jsonCh)
+		broker.UnsubscribeRaw(rawCh)
+		broker.UnsubscribeJSON(otherCh)
 	})
 
 	t.Run("Ring-Buffer Eviction", func(t *testing.T) {
@@ -77,12 +89,9 @@ func TestEventBroker(t *testing.T) {
 		defer broker.Stop()
 
 		// Fill the subscriber channel (limit is 100)
-		ch := broker.Subscribe(FilterOptions{ProjectName: "test-proj"})
+		ch := broker.SubscribeJSON(FilterOptions{ProjectName: "test-proj"})
 		time.Sleep(10 * time.Millisecond)
 
-		// Publish 105 messages.
-		// Subscriber channel capacity is 100.
-		// The oldest 5 messages should be evicted.
 		for i := 0; i < 105; i++ {
 			buf := AcquireTelemetryBuffer()
 			buf.Buffer.WriteString("data")
@@ -93,10 +102,8 @@ func TestEventBroker(t *testing.T) {
 			broker.Publish(event, buf)
 		}
 
-		// Wait for distributor to process
 		time.Sleep(50 * time.Millisecond)
 
-		// Drain and verify we only have 100 messages, and they are the LATEST ones
 		count := 0
 		timeout := time.After(100 * time.Millisecond)
 
@@ -116,7 +123,7 @@ func TestEventBroker(t *testing.T) {
 			t.Errorf("Expected exactly 100 messages to be retained after eviction, got %d", count)
 		}
 
-		broker.Unsubscribe(ch)
+		broker.UnsubscribeJSON(ch)
 	})
 
 	t.Run("Stop explicitly drains inputChan", func(t *testing.T) {
@@ -127,10 +134,8 @@ func TestEventBroker(t *testing.T) {
 		event := &RequestEvent{ProjectNameField: "test-proj"}
 		broker.Publish(event, buf)
 
-		// Stop immediately, the background goroutine should drain the inputChan
 		broker.Stop()
 
-		// If it drained properly, inputChan should be empty
 		if len(broker.inputChan) != 0 {
 			t.Errorf("Expected inputChan to be drained, got %d", len(broker.inputChan))
 		}

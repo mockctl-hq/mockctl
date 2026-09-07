@@ -14,7 +14,7 @@
 >  
 > Authority: Engineering Decision Log
 > 
-> Decision Range: EDL-001 → EDL-056
+> Decision Range: EDL-001 → EDL-057
 > 
 > Document Type: Engineering Governance / Decision Record
 > 
@@ -1906,6 +1906,29 @@ Mock:ctl shall mandate strict Zero-Allocation memory pooling (using `sync.Pool` 
 
 ---
 
+## EDL-057 — TUI Framework
+
+**Decision:**
+Terminal User Interface (TUI) Framework = Charmbracelet Ecosystem (Bubble Tea, Lip Gloss, Bubbles)
+
+**Status:**
+✅ Approved
+
+**Statement:**
+Mock:ctl shall mandate the use of the Charmbracelet ecosystem for all TUI components to build the developer dashboard and interface. Specifically:
+- `bubbletea`: The Elm architecture foundation for state management and layout event loops.
+- `lipgloss`: The styling engine for colors, borders, and margins.
+- `bubbles`: Ready-made components (viewports, text inputs, lists).
+
+**Reason:**
+- **Termux & Mobile Constraints:** Bubble Tea handles `WindowSizeMsg` out of the box, allowing for highly responsive grid layouts necessary for mobile terminal environments.
+- **State Management:** The Elm architecture safely isolates state from rendering, which is critical for a complex multi-pane layout (Sidebars, Workspace, Live Telemetry).
+- **Aesthetics:** It provides modern, unique, and premium UI styling capabilities rarely found in traditional CLI tools, aligning with the product's vision.
+
+**Replacement Risk:** High (Tied deeply into the TUI architecture and rendering loop).
+
+---
+
 ## Document Governance
 
 This Engineering Decision Log is the authoritative record of approved engineering decisions for Mock:ctl.
@@ -1935,7 +1958,7 @@ The Engineering Decision Log is maintained as part of the Project Knowledge Syst
 
 **Status:** Active
 
-**Decision Range:** EDL-001 → EDL-056
+**Decision Range:** EDL-001 → EDL-057
 
 **Authority:** Engineering Decision Log
 
