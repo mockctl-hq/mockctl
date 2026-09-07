@@ -52,7 +52,7 @@ func (m *MetricsCollector) run(ctx context.Context) {
 			return
 		case <-ticker.C:
 			// Vestigial Deadlock Fix: Only generate metrics if someone is watching
-			if m.broker.ActiveConnections() == 0 {
+			if m.broker.ActiveRemoteConnections() == 0 {
 				continue
 			}
 

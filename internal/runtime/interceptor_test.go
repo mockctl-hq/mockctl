@@ -123,7 +123,7 @@ func TestTeeReadCloser(t *testing.T) {
 		}
 	})
 
-	t.Run("Close decreases ref count", func(t *testing.T) {
+	t.Run("Close does NOT decrease ref count", func(t *testing.T) {
 		t.Parallel()
 
 		buf := AcquireTelemetryBuffer()
@@ -140,8 +140,11 @@ func TestTeeReadCloser(t *testing.T) {
 			t.Fatalf("Failed to close: %v", err)
 		}
 
-		if buf.refs.Load() != 0 {
-			t.Errorf("Expected refs to be 0 after close, got %d", buf.refs.Load())
+		if buf.refs.Load() != 1 {
+			t.Errorf("Expected refs to be 1 after close, got %d", buf.refs.Load())
 		}
+
+		// Clean up manually since the test bypassed the middleware that normally decrefs
+		buf.Decref()
 	})
 }

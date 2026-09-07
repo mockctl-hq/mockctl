@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"sync/atomic"
 )
 
 // teeReadCloser intercepts an HTTP request body up to a limit (1MB).
@@ -13,9 +14,15 @@ type teeReadCloser struct {
 	buffer   *RefCountedBuffer
 	limit    int64
 	read     int64
+	closed   atomic.Bool // Set to true when middleware returns
 }
 
 func (t *teeReadCloser) Read(p []byte) (n int, err error) {
+	if t.closed.Load() {
+		// Bypass buffer injection once closed to prevent memory corruption
+		return t.original.Read(p)
+	}
+
 	n, err = t.original.Read(p)
 	if n > 0 {
 		t.read += int64(n)
@@ -33,7 +40,8 @@ func (t *teeReadCloser) Read(p []byte) (n int, err error) {
 }
 
 func (t *teeReadCloser) Close() error {
-	t.buffer.Decref()
+	// CRITICAL: MUST NOT decrement the RefCountedBuffer here!
+	// If a mock handler closes early, the middleware still needs it.
 	return t.original.Close()
 }
 
@@ -46,11 +54,12 @@ type interceptorResponseWriter struct {
 	statusCode  int
 	isHijacked  bool
 	isZeroCopy  bool
-	hijackFn    func() // Callback to publish event immediately on hijack
+	closed      atomic.Bool // Set to true when middleware returns
+	hijackFn    func()      // Callback to publish event immediately on hijack
 }
 
 func (w *interceptorResponseWriter) WriteHeader(statusCode int) {
-	if w.isHijacked {
+	if w.isHijacked || w.closed.Load() {
 		return
 	}
 	if statusCode >= 100 && statusCode < 200 {
@@ -70,6 +79,11 @@ func (w *interceptorResponseWriter) Write(b []byte) (int, error) {
 	if w.isHijacked {
 		return 0, http.ErrHijacked
 	}
+	if w.closed.Load() {
+		// CRITICAL: Prevent Chaotic Goroutine Write-After-Free
+		return w.ResponseWriter.Write(b)
+	}
+
 	if !w.wroteHeader {
 		w.WriteHeader(http.StatusOK)
 	}
@@ -93,6 +107,11 @@ func (w *interceptorResponseWriter) Flush() {
 	}
 }
 
+// Unwrap implements HTTP 1.20 ResponseController compatibility (Go 1.20 Unwrap Trap)
+func (w *interceptorResponseWriter) Unwrap() http.ResponseWriter {
+	return w.ResponseWriter
+}
+
 // Hijack implements http.Hijacker
 func (w *interceptorResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	h, ok := w.ResponseWriter.(http.Hijacker)
@@ -100,10 +119,17 @@ func (w *interceptorResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error
 		return nil, nil, http.ErrNotSupported
 	}
 
+	// CRITICAL: Flush pending bytes before returning TCP control
+	w.Flush()
+
 	conn, rw, err := h.Hijack()
 	if err == nil {
 		w.isHijacked = true
 		w.statusCode = http.StatusSwitchingProtocols // 101
+
+		// CRITICAL: Hijacked connections pin buffers forever! We must decref now.
+		w.buffer.Decref()
+
 		if w.hijackFn != nil {
 			w.hijackFn()
 		}

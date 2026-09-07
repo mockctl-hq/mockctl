@@ -61,14 +61,14 @@ func (s *HTTPServer) handleSSEEvents(w http.ResponseWriter, r *http.Request) {
 		return // Should never happen unless mock initialization is wrong
 	}
 
-	ch := s.broker.Subscribe(FilterOptions{ProjectName: projectName})
+	ch := s.broker.SubscribeJSON(FilterOptions{ProjectName: projectName})
 	if ch == nil {
 		return // Broker stopped
 	}
 
 	// Explicit Unsubscribe and Drain
 	defer func() {
-		s.broker.Unsubscribe(ch)
+		s.broker.UnsubscribeJSON(ch)
 		// CRITICAL (Memory Pool Returns): Drain the channel after Unsubscribe
 		for msg := range ch {
 			if msg.Payload != nil {

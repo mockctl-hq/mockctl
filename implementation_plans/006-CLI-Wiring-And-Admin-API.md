@@ -1,6 +1,7 @@
 # 🛠️ IMP-006: Daemon Wiring & Multi-Project Admin API
 
 > **Plan ID:** IMP-006  
+> **Version:** 1.1 (Embedded Architecture Shift)  
 > **Epic:** Core Application Wiring & Administration  
 > **Status:** 🟢 Approved  
 > **Complexity:** Very High  
@@ -26,10 +27,11 @@ Mock:ctl is transitioning into an Enterprise **Master Daemon** architecture. Thi
 ### 📦 Phase 1: Clean Daemon Initialization (EDL-014)
 **Target File:** `cmd/mockctl/daemon.go`, `internal/app/app.go`
 
-- **Task 1.1 (Dumb CLI):** Create `mockctl daemon` Cobra command. It performs NO business logic (per EDL-014). It only parses the `--port` flag and delegates execution to `app.StartDaemon(ctx, port)`.
-- **Task 1.2 (App Bootstrapping & Cross-Platform Paths):** Inside `app.StartDaemon()`, use `filepath.Join(userHome, ".mockctl")` (PKS-028 compliant) to initialize the directory, instantiate `internal/storage/bbolt`, and acquire the `daemon.pid` lock file.
-- **Task 1.3 (Non-Blocking Re-hydration):** `App` must read all saved `Project` structs from BBolt in a fast read-transaction. After releasing the DB lock, it iterates over the projects, parses specs, and compiles `RuntimeEngine`s.
+- **Task 1.1 (App-Based CLI Strategy):** Mock:ctl is an "App-Based" CLI. We do NOT provide isolated CRUD commands (like `mockctl project create`). Create ONLY the `mockctl daemon` (Headless Server) and `mockctl studio` (TUI) Cobra commands. They perform NO business logic (EDL-014) and simply delegate execution to `app.StartDaemon(ctx)` or `app.StartStudio(ctx)`. Both commands natively embed the Backend Core.
+- **Task 1.2 (App Bootstrapping & Token Generation):** Inside `app.StartDaemon()` and `app.StartStudio()`, use `filepath.Join(userHome, ".mockctl")` (PKS-028 compliant) to initialize the directory, instantiate `internal/storage/bbolt`, and acquire the BBolt lock. **CRITICAL:** The app MUST check for the existence of `admin.token`. If missing, it MUST cryptographically generate a secure 32-byte hex token (`crypto/rand`) and save it with strict `0600` file permissions to prevent local privilege escalation.
+- **Task 1.3 (Non-Blocking Re-hydration):** `App` must read all saved `Project` structs from BBolt in a fast read-transaction (`db.View`). **CRITICAL (Locking):** It MUST only release the *Transaction Read Lock* so other goroutines aren't blocked. It MUST NOT close the database (which releases the OS File Lock) until the Daemon/TUI shuts down. After releasing the transaction lock, it iterates over the projects, parses specs, and compiles `RuntimeEngine`s.
 - **Task 1.4 (TUI-Safe & Docker-Safe Logs):** Refactor `setupLogger()`. If in Docker/headless mode (PKS-030), write Structured JSON to `os.Stdout`. Otherwise, redirect to `filepath.Join(home, ".mockctl", "daemon.log")` to prevent UI corruption.
+- **Task 1.5 (Token Transparency):** Before `mockctl daemon` redirects its logs to `daemon.log`, it MUST print a single, clean line to `os.Stdout` (e.g., `🚀 Mock:ctl Daemon running on port 8080. Admin token saved at: ~/.mockctl/admin.token`). This ensures CI/CD engineers know exactly where to find the auth token since the rest of the logs are hidden.
 
 ### 🧩 Phase 2: Application Orchestration & Dynamic Routing (PKS-020)
 **Target File:** `internal/app/app.go`, `internal/runtime/server.go`
@@ -52,7 +54,7 @@ Mock:ctl is transitioning into an Enterprise **Master Daemon** architecture. Thi
   - `POST /__mockctl/projects/{name}/state/reset`: Flushes live CRUD data inside `internal/storage/memory`.
   - `PATCH /__mockctl/projects/{name}/chaos`: Calls `UpdateConfig(ctx)` on the specific project's chaos evaluator.
 
-*(Note: Real-Time SSE Events are reserved for **IMP-007**. The Interactive Terminal Dashboard (TUI) is reserved for **IMP-008**).*
+*(Note: Real-Time SSE Events are reserved for **IMP-007**. The Interactive Terminal Dashboard (TUI) is reserved for **IMP-008**. The TUI explicitly embeds the Backend Engine directly into memory and does NOT use these HTTP Admin APIs. These Admin APIs exist strictly for remote headless management via curl/CI).*
 
 ---
 
@@ -75,7 +77,8 @@ Mock:ctl is transitioning into an Enterprise **Master Daemon** architecture. Thi
 - **Graceful Shutdown Hangs:** The `SIGTERM` trap MUST enforce a strict timeout (e.g., 3-5 seconds). If requests (like chaos-delayed responses) do not finish, the server must forcefully terminate to avoid freezing the CLI.
 - **Compilation Bottlenecks & Rollbacks:** Engine compilation/validation MUST happen BEFORE opening a BBolt write-transaction. If compilation fails, the database remains untouched. Bulk endpoint additions MUST be debounced.
 - **Termux `/tmp` Stream Parsing:** The Admin API MUST parse large `multipart/form-data` uploads using streaming (`io.Reader`) instead of `ParseMultipartForm` to bypass memory/disk issues in restricted environments like Android/Termux.
-- **Port Conflicts:** If `8080` is in use, the Daemon MUST output a clean, user-friendly error specifying the blocked port, and optionally suggest or fallback to an alternate port, instead of a raw panic.
+- **Database Lock Rejection (Pragmatic Fallback):** Because `mockctl daemon` and `mockctl studio` embed the core, they lock the BBolt database. If a user attempts to run a second instance, the process MUST catch the BBolt lock error and fail gracefully with a user-friendly error: `🚫 Error: Mock:ctl is already running in another terminal. Please close it first.`
+- **Port Conflicts (Strict Failure):** If `8080` is in use, the Daemon MUST output a clean, user-friendly error specifying the blocked port (e.g., `Error: Port 8080 is in use. Please free it or use --port`). **CRITICAL (CI/CD Trap):** The Daemon MUST NOT auto-fallback to a random port like 8081. Auto-fallback breaks headless CI/CD scripts (`curl localhost:8080`) that expect a predictable port.
 
 ---
 
@@ -85,3 +88,11 @@ Mock:ctl is transitioning into an Enterprise **Master Daemon** architecture. Thi
 - [ ] **Dynamic Routing Gateway:** `POST /__mockctl/projects` successfully routes traffic to `/auth/*` instantly.
 - [ ] **Log Isolation:** Server logs conditionally output to `daemon.log` (local) or `os.Stdout` (Docker).
 - [ ] **API Security:** Calling `http://localhost:8080/__mockctl/projects` without a valid token returns `401 Unauthorized`.
+
+---
+
+## 🔮 6. Future Architectural Risks & Scalability Limits
+While the current architecture is perfectly optimized for local development and CI/CD, the following scalability limits must be tracked for future enterprise iterations:
+- **Monolithic DB Write Bottleneck:** `bbolt` enforces a single global write-lock. Extreme concurrent writes (e.g., hundreds of users uploading 10MB specs simultaneously) will cause brief blocking. This is an acceptable trade-off for zero-dependency local setups.
+- **Eager Loading Memory Overload:** The Daemon eagerly compiles all projects into RAM on startup (Task 1.3). If a user scales to 500+ massive projects, this will cause slow startups and high memory (1GB+) consumption. Future iterations may require "Lazy Loading" (compiling only upon the first HTTP request to that project).
+- **Orphaned Port on UI Crash:** If the TUI panics unexpectedly, the OS might kill the UI thread but leave background HTTP goroutines running, holding port `8080` hostage. The `main()` function MUST implement a rock-solid `defer` cleanup to forcefully release the port during a panic.

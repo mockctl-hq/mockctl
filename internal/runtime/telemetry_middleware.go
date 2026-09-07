@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,20 +8,20 @@ import (
 	"sync/atomic"
 	"time"
 	"unicode/utf8"
-	"unsafe"
 )
 
 const maxTelemetryBodySize = 1 * 1024 * 1024 // 1MB
 
-// globalSequenceID generates monotonically increasing sequence IDs for drop detection.
-var globalSequenceID atomic.Int64
+// correlationCounter ensures unique UUID-like correlation IDs for requests
+var correlationCounter atomic.Int64
 
 // TelemetryMiddleware generates real-time HTTP events and pushes them to the EventBroker.
 func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			startTime := time.Now()
-			seqID := strconv.FormatInt(globalSequenceID.Add(1), 10)
+			seqID := strconv.FormatInt(broker.GetNextSequenceID(), 10)
+			corrID := strconv.FormatInt(correlationCounter.Add(1), 10)
 
 			// Fast deep copy of headers
 			reqHeaderCopy := r.Header.Clone()
@@ -31,6 +30,7 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 			// Prepare early metadata event
 			baseEvent := &RequestEvent{
 				SequenceID:       seqID,
+				CorrelationID:    corrID,
 				Timestamp:        startTime,
 				ProjectNameField: projectName,
 				HTTPMethod:       r.Method,
@@ -41,15 +41,15 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 				RequestSizeBytes: r.ContentLength,
 			}
 
-			// Extract ProjectName from request context if Engine populates it (or via Chi route)
-			// Assuming there's a convention for it, left as "unknown" for now.
-
 			// Immediately publish 'request_started' to prevent Slow-Reader Invisibility
 			publishEvent(broker, baseEvent)
 
 			// Setup Tee-Reader for Request Body
 			reqBuffer := AcquireTelemetryBuffer()
 			reqBuffer.Buffer.Reset()
+
+			// Transfer ownership of ref to event
+			baseEvent.RequestBody = reqBuffer
 
 			customReadCloser := &teeReadCloser{
 				original: r.Body,
@@ -61,6 +61,9 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 			// Setup Tee-Writer for Response
 			resBuffer := AcquireTelemetryBuffer()
 			resBuffer.Buffer.Reset()
+
+			// Transfer ownership of ref to event
+			baseEvent.ResponseBody = resBuffer
 
 			interceptor := &interceptorResponseWriter{
 				ResponseWriter: w,
@@ -79,6 +82,10 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 
 			// Deferred Panic Recovery and Final Telemetry Publication
 			defer func() {
+				// Prevent Chaostic Goroutine Write-After-Free
+				interceptor.closed.Store(true)
+				customReadCloser.closed.Store(true)
+
 				// Panic Recovery
 				if rec := recover(); rec != nil {
 					baseEvent.PanicError = fmt.Sprintf("%v", rec)
@@ -101,26 +108,20 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 					}
 				}
 
-				// Extract buffers as zero-allocation strings safely
-				reqBytes := customReadCloser.buffer.Buffer.Bytes()
-				resBytes := interceptor.buffer.Buffer.Bytes()
-
-				// Binary Payload Destruction Fix
-				if utf8.Valid(reqBytes) {
-					baseEvent.RequestBody = unsafe.String(unsafe.SliceData(reqBytes), len(reqBytes)) // #nosec G103
-				} else if len(reqBytes) > 0 {
-					baseEvent.RequestBody = base64.StdEncoding.EncodeToString(reqBytes)
+				// Check Base64 encodings
+				reqBytes := reqBuffer.Buffer.Bytes()
+				if len(reqBytes) > 0 && !utf8.Valid(reqBytes) {
+					baseEvent.IsRequestBodyBase64 = true
 				}
 
-				if utf8.Valid(resBytes) {
-					baseEvent.ResponseBody = unsafe.String(unsafe.SliceData(resBytes), len(resBytes)) // #nosec G103
-				} else if len(resBytes) > 0 {
-					baseEvent.ResponseBody = base64.StdEncoding.EncodeToString(resBytes)
+				resBytes := resBuffer.Buffer.Bytes()
+				if len(resBytes) > 0 && !utf8.Valid(resBytes) {
+					baseEvent.IsResponseBodyBase64 = true
 				}
 
 				// Check truncations
-				baseEvent.IsRequestBodyTruncated = customReadCloser.buffer.Buffer.Len() == maxTelemetryBodySize
-				baseEvent.IsResponseBodyTruncated = interceptor.buffer.Buffer.Len() == maxTelemetryBodySize
+				baseEvent.IsRequestBodyTruncated = reqBuffer.Buffer.Len() == maxTelemetryBodySize
+				baseEvent.IsResponseBodyTruncated = resBuffer.Buffer.Len() == maxTelemetryBodySize
 
 				// Telemetry Blindspot Fix (Unread body)
 				if r.ContentLength > 0 && customReadCloser.read == 0 {
@@ -135,10 +136,13 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 				baseEvent.ResponseHeaders = interceptor.Header().Clone()
 
 				// Publish completed event
-				publishEvent(broker, baseEvent)
-
-				// Cleanup Response buffer (since ResponseWriter has no Close method)
-				resBuffer.Decref()
+				// We don't publish if hijacked, since it was published early and would cause duplicate keys.
+				if !interceptor.isHijacked {
+					publishEvent(broker, baseEvent)
+				} else {
+					// We must manually decref because we skipped Publish
+					baseEvent.Decref()
+				}
 			}()
 
 			// Execute the mock handler
@@ -149,26 +153,34 @@ func TelemetryMiddleware(broker EventPublisher, projectName string) func(http.Ha
 
 // publishEvent asynchronously encodes and pushes the event to the broker
 func publishEvent(broker EventPublisher, event *RequestEvent) {
-	if broker.ActiveConnections() == 0 {
-		return
-	}
+	// If no internal connections exist, no one receives the raw event.
+	// But BboltPersister should always be active.
+	// Wait, we always publish because BboltPersister needs it, even if no Remote SSE.
 
-	jsonBuf := AcquireTelemetryBuffer()
-	jsonBuf.Buffer.Reset()
+	var jsonBuf *RefCountedBuffer
 
-	// Synchronous encoding leveraging handler's goroutine
-	err := json.NewEncoder(jsonBuf.Buffer).Encode(event)
-	if err == nil {
-		// JSON Newline Parse Error Fix
-		b := jsonBuf.Buffer.Bytes()
-		if len(b) > 0 && b[len(b)-1] == '\n' {
-			jsonBuf.Buffer.Truncate(len(b) - 1)
+	// Only allocate and encode JSON if there are active SSE web clients
+	if broker.ActiveRemoteConnections() > 0 {
+		jsonBuf = AcquireTelemetryBuffer()
+		jsonBuf.Buffer.Reset()
+
+		encoder := json.NewEncoder(jsonBuf.Buffer)
+		encoder.SetEscapeHTML(false) // CRITICAL: JSON HTML Escaping Mutilation
+
+		err := encoder.Encode(event)
+		if err == nil {
+			// JSON Newline Parse Error Fix
+			b := jsonBuf.Buffer.Bytes()
+			if len(b) > 0 && b[len(b)-1] == '\n' {
+				jsonBuf.Buffer.Truncate(len(b) - 1)
+			}
+		} else {
+			jsonBuf.Decref()
+			jsonBuf = nil
 		}
-
-		// jsonBuf base count (ref=1) is passed to Publish
-		// It will be decref'd by the broker when appropriate
-		broker.Publish(event, jsonBuf)
-	} else {
-		jsonBuf.Decref()
 	}
+
+	// broker.Publish handles raw fan-out natively.
+	// It accepts jsonBuf which may be nil.
+	broker.Publish(event, jsonBuf)
 }

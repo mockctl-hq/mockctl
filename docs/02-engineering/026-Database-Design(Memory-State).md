@@ -216,8 +216,7 @@ If a developer opens two separate terminals and runs `mockctl start` for two dif
 
 **The Implementation Strategy:**
 1. **Lock Timeout:** The engine must attempt to acquire the database lock with a strict `1-second timeout`.
-2. **Read-Only Fallback:** If the lock is denied (meaning another instance is already running), the second instance MUST gracefully fall back to **Read-Only Mode**.
-3. **Behavior in Read-Only Mode:** The second instance can successfully read the License Key and Settings to function normally, but it will skip writing to the `telemetry_bucket`. This ensures the developer's workflow is never interrupted by database crashes.
+2. **Database Lock Rejection (Pragmatic Fallback):** If the lock is denied (meaning another instance is already running), the second instance MUST NOT enter a confusing read-only state. Instead, the process MUST fail gracefully with a user-friendly error (e.g., `🚫 Error: Database is locked by another instance. Please close it first.`) and immediately exit. This enforces strict single-process ownership (essential for the Embedded UI mode).
 
 ---
 
