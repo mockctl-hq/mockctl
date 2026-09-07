@@ -87,7 +87,8 @@ func setupLogger() {
 		home, err := os.UserHomeDir()
 		if err == nil {
 			logPath := filepath.Join(home, ".mockctl", "daemon.log")
-			if f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err == nil {
+			// #nosec G302 G304 -- logPath is deterministic, and 0600 is used for secure permissions
+			if f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600); err == nil {
 				logWriter = f
 			}
 		}

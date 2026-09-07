@@ -60,23 +60,25 @@ func StartDaemon(ctx context.Context, port int) error {
 
 	// Task 1.2: Check for existing Admin Token, generate if missing
 	tokenFile := filepath.Join(mockctlDir, "admin.token")
-	var adminToken string
-	if tokenData, err := os.ReadFile(tokenFile); err == nil {
-		adminToken = string(tokenData)
-	} else {
+	
+	// #nosec G304 -- tokenFile path is deterministically built from user home directory
+	tokenData, err := os.ReadFile(tokenFile)
+	if err != nil {
 		// Generate Admin Token (Secure 32-byte hex)
 		tokenBytes := make([]byte, 32)
 		if _, err := rand.Read(tokenBytes); err != nil {
 			return err
 		}
-		adminToken = hex.EncodeToString(tokenBytes)
-		if err := systemStore.SaveAuthToken(ctx, adminToken); err != nil {
-			return fmt.Errorf("failed to save admin token to db: %w", err)
-		}
-		if err := os.WriteFile(tokenFile, []byte(adminToken), 0600); err != nil {
+		tokenData = []byte(hex.EncodeToString(tokenBytes))
+		if err := os.WriteFile(tokenFile, tokenData, 0600); err != nil {
 			return fmt.Errorf("failed to write admin.token: %w", err)
 		}
 		logger.Info("Admin Access Token Generated and Saved")
+	}
+
+	// Always sync the token to the DB on startup to prevent drift if system.db was deleted
+	if err := systemStore.SaveAuthToken(ctx, string(tokenData)); err != nil {
+		return fmt.Errorf("failed to sync admin token to db: %w", err)
 	}
 
 	// Task 2.2: ProjectGateway Router
