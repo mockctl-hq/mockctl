@@ -60,7 +60,7 @@ func StartDaemon(ctx context.Context, port int) error {
 
 	// Task 1.2: Check for existing Admin Token, generate if missing
 	tokenFile := filepath.Join(mockctlDir, "admin.token")
-	
+
 	// #nosec G304 -- tokenFile path is deterministically built from user home directory
 	tokenData, err := os.ReadFile(tokenFile)
 	if err != nil {
