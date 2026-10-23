@@ -18,7 +18,7 @@ func TestSettingsModel_Update_Tabs(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := settings.NewSettingsModel(tuiCtx)
@@ -54,7 +54,7 @@ func TestSettingsModel_View_Renders(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	ctx := context.Background()
 	core, _ := app.NewApp(ctx)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := settings.NewSettingsModel(tuiCtx)

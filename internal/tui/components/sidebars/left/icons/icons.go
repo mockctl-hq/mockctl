@@ -38,8 +38,6 @@ func (m *LeftIconsModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 			if m.ActiveIndex > 0 {
 				m.ActiveIndex--
 			}
-		} else if key.Matches(msg, types.GlobalKeys.Down) {
-			// No other icons to go down to for now
 		}
 	}
 	return m, nil

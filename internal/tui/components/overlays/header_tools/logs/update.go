@@ -80,7 +80,7 @@ func (m *GlobalLogsModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 		if !m.Search.Focused() {
 			m.Viewport, cmd = m.Viewport.Update(msg)
 			cmds = append(cmds, cmd)
-			if msg.Type == tea.MouseWheelUp {
+			if msg.Button == tea.MouseButtonWheelUp {
 				m.AutoTail = false
 			}
 		}

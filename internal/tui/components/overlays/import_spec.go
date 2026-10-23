@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -27,8 +26,6 @@ type ImportSpecModel struct {
 	Matches     []string
 	CursorIndex int
 	SearchMode  bool
-
-	loadOnce sync.Once
 }
 
 func NewImportSpecModel(ctx types.TUIContext) *ImportSpecModel {
@@ -63,9 +60,9 @@ func (m *ImportSpecModel) loadFilesCmd() tea.Cmd {
 		homeSepCount := strings.Count(cleanHome, string(filepath.Separator))
 
 		var files []string
-		_ = filepath.WalkDir(cleanHome, func(path string, d os.DirEntry, err error) error {
-			if err != nil {
-				return nil
+		_ = filepath.WalkDir(cleanHome, func(path string, d os.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				return nil //nolint:nilerr // Ignore inaccessible directories during spec search
 			}
 			depth := strings.Count(path, string(filepath.Separator)) - homeSepCount
 			if depth > 5 {

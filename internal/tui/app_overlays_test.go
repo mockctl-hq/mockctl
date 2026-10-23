@@ -18,7 +18,7 @@ func TestRootModel_OverlayShortcuts_AltAndCtrl(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	model := tui.NewRootModel(tuiCtx)
@@ -82,7 +82,7 @@ func TestRootModel_ShowToastMsg(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	root := tui.NewRootModel(tuiCtx)
@@ -101,7 +101,7 @@ func TestRootModel_DeleteProject_Overlay(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	root := tui.NewRootModel(tuiCtx)
@@ -129,7 +129,7 @@ func TestRootModel_DaemonCrashed_Overlay(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	root := tui.NewRootModel(tuiCtx)
@@ -150,7 +150,7 @@ func TestRootModel_StateInspector_ActiveProject(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	root := tui.NewRootModel(tuiCtx)
@@ -181,7 +181,7 @@ func TestRootModel_SidebarToggling_CtrlB_CtrlE(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	root := tui.NewRootModel(tuiCtx)
@@ -229,7 +229,7 @@ func TestRootModel_Telemetry_Streaming(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	root := tui.NewRootModel(tuiCtx)

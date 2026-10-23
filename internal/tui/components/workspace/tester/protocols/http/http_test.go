@@ -19,7 +19,7 @@ func TestHttpTesterModel_FocusRouting(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := http.NewHttpTesterModel(tuiCtx)
@@ -66,7 +66,7 @@ func TestHttpTesterModel_Cancellation(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := http.NewHttpTesterModel(tuiCtx)
@@ -90,7 +90,7 @@ func TestHttpTesterModel_StartupSettingsSync(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	cfg := types.DefaultSettingsConfig()
 	cfg.RequestTimeout = 30 * time.Second

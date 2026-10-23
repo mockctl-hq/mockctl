@@ -28,7 +28,7 @@ func TestIntegration_RootModel_Headless(t *testing.T) {
 	// 1. Boot the Master Daemon
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	// Start server on random port in background
 	errChan := core.ServeInBackground(ctx, 8081)

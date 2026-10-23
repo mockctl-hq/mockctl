@@ -18,7 +18,7 @@ func TestRightSidebarModel_Update(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := right.NewRightSidebarModel(tuiCtx)
@@ -42,7 +42,7 @@ func TestRightSidebarModel_TitleSyncOnNavigation(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := right.NewRightSidebarModel(tuiCtx)
@@ -79,7 +79,7 @@ func TestRightSidebarModel_CollapsedView(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := right.NewRightSidebarModel(tuiCtx)

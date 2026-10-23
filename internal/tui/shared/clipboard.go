@@ -31,11 +31,8 @@ func WriteToClipboard(text string) error {
 	}()
 
 	select {
-	case err := <-done:
-		if err != nil {
-			// Since OSC 52 was already emitted, system tool error is not fatal
-			return nil
-		}
+	case <-done:
+		// Since OSC 52 was already emitted, external clipboard failure is non-fatal
 		return nil
 	case <-time.After(300 * time.Millisecond):
 		// Timed out waiting for external process, OSC 52 was already sent

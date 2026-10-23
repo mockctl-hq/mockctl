@@ -16,7 +16,7 @@ func TestHttpTesterModel_DraftsPersistenceAcrossEndpoints(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	tester := http.NewHttpTesterModel(tuiCtx)

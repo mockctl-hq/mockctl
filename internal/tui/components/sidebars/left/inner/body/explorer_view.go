@@ -28,7 +28,7 @@ func (m *ProjectTreeModel) View() string {
 
 		isCursorActive := m.IsFocused && isCursor
 
-		prefix := "  "
+		var prefix string
 		if node.IsProject {
 			if node.IsExpanded {
 				prefix = "  ▼ "

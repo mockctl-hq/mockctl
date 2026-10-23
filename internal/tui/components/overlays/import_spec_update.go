@@ -111,7 +111,7 @@ func (m *ImportSpecModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 				m.ErrorMsg = "Failed to open file: " + err.Error()
 				return m, nil
 			}
-			defer file.Close()
+			defer func() { _ = file.Close() }()
 
 			content, err := io.ReadAll(file)
 			if err != nil {

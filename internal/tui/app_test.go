@@ -23,7 +23,7 @@ func TestRootModel_Update_Routing(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{
 		Ctx:        ctx,
@@ -71,7 +71,7 @@ func TestRootModel_DeathSpiral_Warning(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	ctx := context.Background()
 	core, _ := app.NewApp(ctx)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	model := tui.NewRootModel(tuiCtx)
 
@@ -86,7 +86,7 @@ func TestRootModel_MinimumSize_Warning(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	ctx := context.Background()
 	core, _ := app.NewApp(ctx)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, ActivePort: 8080}
 	model := tui.NewRootModel(tuiCtx)
 
@@ -101,7 +101,7 @@ func TestRootModel_UIAnimations_Toggle(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	cfg := types.DefaultSettingsConfig()
 	cfg.UIAnimations = true
@@ -144,7 +144,7 @@ func TestRootModel_Theme_Switching(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 	defer types.ApplyTheme(0)
 
 	cfg := types.DefaultSettingsConfig()
@@ -175,7 +175,7 @@ func TestRootModel_Settings_Persistence(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	cfg := types.DefaultSettingsConfig()
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core, Settings: cfg}

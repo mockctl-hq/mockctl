@@ -136,7 +136,7 @@ func (c *Client) ExecuteRequest(ctx context.Context, method, url string, headers
 	if err != nil {
 		return &TestResponse{Error: err, Latency: latency}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// PKS-008: Binary Protection (Max 1MB)
 	contentType := resp.Header.Get("Content-Type")

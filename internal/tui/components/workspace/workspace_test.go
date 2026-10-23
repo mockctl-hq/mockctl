@@ -20,7 +20,7 @@ func TestWorkspaceModel_Layout(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := workspace.NewWorkspaceModel(tuiCtx)
@@ -42,7 +42,7 @@ func TestWorkspaceModel_Focus(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := workspace.NewWorkspaceModel(tuiCtx)
@@ -61,7 +61,7 @@ func TestWorkspaceModel_SettingsChangedRouting(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := workspace.NewWorkspaceModel(tuiCtx)
@@ -92,7 +92,7 @@ func TestWorkspaceModel_EndpointSelectedRouting(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := workspace.NewWorkspaceModel(tuiCtx)
@@ -114,7 +114,7 @@ func TestWorkspaceModel_Editor_SettingsRouting(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	cfg := types.DefaultSettingsConfig()
 	cfg.LineWrapping = false
@@ -144,7 +144,7 @@ func TestWorkspaceModel_Editor_LineWrapping(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	cfg := types.DefaultSettingsConfig()
 	cfg.LineWrapping = false
@@ -177,7 +177,7 @@ func TestWorkspaceModel_Editor_TabExpansion(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	cfg := types.DefaultSettingsConfig()
 	cfg.TabSize = 4
@@ -218,7 +218,7 @@ func TestWorkspaceModel_Editor_FormatShortcut(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	cfg := types.DefaultSettingsConfig()
 	cfg.TabSize = 4
@@ -241,7 +241,7 @@ func TestWorkspaceModel_CloseTab_RemovesTabCompletely(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := workspace.NewWorkspaceModel(tuiCtx)

@@ -117,7 +117,7 @@ func (s *HTTPServer) loggerMiddleware(next http.Handler) http.Handler {
 	var reqLogger *log.Logger
 	if userHome, err := os.UserHomeDir(); err == nil && userHome != "" {
 		reqLogDir := filepath.Join(userHome, ".mockctl")
-		_ = os.MkdirAll(reqLogDir, 0755)
+		_ = os.MkdirAll(reqLogDir, 0750)
 		reqLogPath := filepath.Join(reqLogDir, "requests.log")
 		// #nosec G302 G304 -- reqLogPath is deterministic in ~/.mockctl and uses secure 0600 permissions
 		logFile, err := os.OpenFile(reqLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)

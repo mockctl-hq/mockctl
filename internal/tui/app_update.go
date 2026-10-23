@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"fmt"
+
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mockctl-hq/mockctl/internal/tui/components/overlays"

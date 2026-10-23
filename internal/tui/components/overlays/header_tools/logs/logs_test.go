@@ -18,7 +18,7 @@ func TestGlobalLogsModel_Update(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := logs.NewGlobalLogsModel(tuiCtx)
@@ -48,7 +48,7 @@ func TestGlobalLogsModel_TelemetryEvent(t *testing.T) {
 	ctx := context.Background()
 	core, err := app.NewApp(ctx)
 	require.NoError(t, err)
-	defer core.Shutdown(ctx)
+	defer func() { _ = core.Shutdown(ctx) }()
 
 	tuiCtx := types.TUIContext{Ctx: ctx, Core: core}
 	model := logs.NewGlobalLogsModel(tuiCtx)
