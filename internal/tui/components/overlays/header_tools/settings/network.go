@@ -102,7 +102,7 @@ func (m *NetworkTabModel) View() string {
 	} else {
 		bufStr = inactiveStyle.Render(bufStr)
 	}
-	
+
 	helpStr := dimStyle.Render("Press Space/Enter to toggle")
 
 	return lipgloss.JoinVertical(lipgloss.Left, corsStr, "", strictStr, "", timeStr, "", bufStr, "", helpStr)

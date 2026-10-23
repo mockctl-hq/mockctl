@@ -20,7 +20,7 @@ import (
 
 func TestIntegration_RootModel_Headless(t *testing.T) {
 	defer goleak.VerifyNone(t)
-	
+
 	t.Setenv("HOME", t.TempDir())
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -66,6 +66,3 @@ func TestIntegration_RootModel_Headless(t *testing.T) {
 	view = rootModel.View()
 	assert.Contains(t, view, "Settings")
 }
-
-
-

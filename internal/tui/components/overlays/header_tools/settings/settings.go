@@ -9,12 +9,12 @@ import (
 )
 
 type SettingsModel struct {
-	tuiCtx      types.TUIContext
-	Size        tea.WindowSizeMsg
-	Active      bool
-	IsFocused   bool
-	ActiveTab   int // 0: Theme, 1: Network, 2: Editor, 3: Tester
-	FocusPane   int // 0: Sidebar, 1: Content
+	tuiCtx    types.TUIContext
+	Size      tea.WindowSizeMsg
+	Active    bool
+	IsFocused bool
+	ActiveTab int // 0: Theme, 1: Network, 2: Editor, 3: Tester
+	FocusPane int // 0: Sidebar, 1: Content
 
 	ThemeTab   *ThemeTabModel
 	NetworkTab *NetworkTabModel
@@ -107,7 +107,7 @@ func (m *SettingsModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 				return types.SettingsChangedMsg{Config: cfg}
 			}
 		}
-		
+
 		if msg.String() == "left" || msg.String() == "h" {
 			m.FocusPane = 0
 			return m, nil
@@ -118,7 +118,7 @@ func (m *SettingsModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 				return m, nil
 			}
 		}
-		
+
 		if m.FocusPane == 0 {
 			// Sidebar Navigation
 			if msg.String() == "up" || msg.String() == "k" || key.Matches(msg, types.GlobalKeys.TabBackward) {

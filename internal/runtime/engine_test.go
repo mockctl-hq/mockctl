@@ -25,7 +25,7 @@ func (f *fakeLogger) Debug(msg string, args ...any)            {}
 // FakeClock
 type fakeClock struct{}
 
-func (f *fakeClock) Now() time.Time { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
+func (f *fakeClock) Now() time.Time                         { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }
 func (f *fakeClock) After(d time.Duration) <-chan time.Time { return time.After(d) }
 
 // FakeValueProvider
@@ -46,7 +46,8 @@ func (f *fakeChaosEvaluator) Evaluate(ctx context.Context) (int, error) {
 	return f.status, f.err
 }
 func (f *fakeChaosEvaluator) UpdateConfig(ctx context.Context, errorRate int, latencyMs int) {}
-func (f *fakeChaosEvaluator) UpdateConfigWithStatus(ctx context.Context, enabled bool, errorRate int, latencyMs int, statusCode int) {}
+func (f *fakeChaosEvaluator) UpdateConfigWithStatus(ctx context.Context, enabled bool, errorRate int, latencyMs int, statusCode int) {
+}
 func (f *fakeChaosEvaluator) Config() (bool, int, int, int) { return false, 0, 0, 500 }
 
 // FakeStateStore

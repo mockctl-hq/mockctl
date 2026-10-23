@@ -46,9 +46,6 @@ func (m *YamlEditorModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 			}
 			m.AutoFormatOnSave = msg.Config.AutoFormatOnSave
 			if changed {
-				if m.LineWrapping {
-					m.Viewport.SetXOffset(0)
-				}
 				m.updateViewportContent()
 			}
 		}
@@ -96,7 +93,7 @@ func (m *YamlEditorModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 
 func (m *YamlEditorModel) SetContent(content string) tea.Cmd {
 	m.RawContent = content
-	
+
 	// Syntax Highlighting (Async for large files, sync for small)
 	if len(content) < 100*1024 && content != "" {
 		var buf strings.Builder

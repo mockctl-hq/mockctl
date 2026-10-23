@@ -164,7 +164,7 @@ func (m *MemoryStateStore) Reset(ctx context.Context) error {
 func (m *MemoryStateStore) GetSnapshot() map[string]map[string]map[string]any {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	// Deep copy to prevent race conditions during UI traversal
 	snapshot := make(map[string]map[string]map[string]any)
 	for coll, docs := range m.store {

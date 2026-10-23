@@ -63,12 +63,12 @@ func (m *HTTPEventViewer) View() string {
 	for k, v := range m.Event.RequestHeaders {
 		reqHeaders = append(reqHeaders, fmt.Sprintf("%s: %s", k, strings.Join(v, ", ")))
 	}
-	
+
 	reqHeadersStr := labelStyle.Render("None")
 	if len(reqHeaders) > 0 {
 		reqHeadersStr = valueStyle.Render(strings.Join(reqHeaders, "\n"))
 	}
-	
+
 	headersBlock := lipgloss.JoinVertical(lipgloss.Left,
 		titleStyle.Render("Request Headers"),
 		"",
@@ -80,7 +80,7 @@ func (m *HTTPEventViewer) View() string {
 	if m.Event.ChaosLatencyMs > 0 || m.Event.ChaosErrorInjected != "" {
 		chaosStr = lipgloss.NewStyle().Foreground(types.DefaultTheme.Warning).Render("Yes (Delay/Error applied)")
 	}
-	
+
 	chaosBlock := lipgloss.JoinVertical(lipgloss.Left,
 		titleStyle.Render("Chaos Engineering"),
 		"",
@@ -90,7 +90,7 @@ func (m *HTTPEventViewer) View() string {
 	// Layout
 	leftCol := lipgloss.JoinVertical(lipgloss.Left, summary, "", chaosBlock)
 	rightCol := headersBlock
-	
+
 	content := lipgloss.JoinHorizontal(lipgloss.Top, leftCol, "    ", rightCol)
 
 	return lipgloss.NewStyle().Padding(1, 2).Render(content)

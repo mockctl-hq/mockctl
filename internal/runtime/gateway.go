@@ -82,7 +82,7 @@ func (g *ProjectGateway) GetEngine(projectName string) *RuntimeEngine {
 func (g *ProjectGateway) ListEngines() map[string]*RuntimeEngine {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
-	
+
 	copy := make(map[string]*RuntimeEngine)
 	for k, v := range g.engines {
 		copy[k] = v

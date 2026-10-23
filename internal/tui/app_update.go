@@ -44,12 +44,12 @@ func (m *RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			centerWidth = 0
 		}
 		innerMsg := tea.WindowSizeMsg{Width: centerWidth, Height: middleHeight}
-		
+
 		_, cmd1 := m.Workspace.Update(innerMsg)
 		_, cmd2 := m.Header.Update(msg)
 		_, cmd3 := m.Footer.Update(msg)
 		cmds = append(cmds, cmd1, cmd2, cmd3)
-		
+
 		m.LeftSidebar.IsCollapsed = !m.LeftSidebarVisible
 		m.RightSidebar.IsCollapsed = !m.RightSidebarVisible
 		leftMsg := tea.WindowSizeMsg{Width: leftWidth, Height: middleHeight}
@@ -59,7 +59,7 @@ func (m *RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		rightMsg := tea.WindowSizeMsg{Width: rightWidth, Height: middleHeight}
 		_, cmd5 := m.RightSidebar.Update(rightMsg)
 		cmds = append(cmds, cmd5)
-		
+
 		// Pass WindowSizeMsg to all overlays so they know the screen dimensions
 		m.GlobalLog.Update(msg)
 		m.Settings.Update(msg)
@@ -69,7 +69,7 @@ func (m *RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ScreenWarning.Update(msg)
 		m.DaemonCrashed.Update(msg)
 		m.DeleteProject.Update(msg)
-		
+
 		return m, tea.Batch(cmds...)
 
 	case types.BlinkMsg:
@@ -189,7 +189,7 @@ paths:
                   status:
                     type: string
 `, msg.Value)
-			
+
 			err := m.Ctx.Core.CreateProject(context.Background(), msg.Value, []byte(defaultSpec))
 			if err == nil {
 				// Refresh the sidebar project tree
@@ -200,7 +200,7 @@ paths:
 
 	case types.TesterToggleMsg:
 		m.ApiTesterExpanded = !m.ApiTesterExpanded
-		
+
 		if m.ApiTesterExpanded {
 			m.FocusRing = types.FocusApiTester
 		} else if m.FocusRing == types.FocusApiTester {
@@ -211,18 +211,18 @@ paths:
 		// Send message down to Workspace so it can expand its tester panel
 		_, cmd := m.Workspace.Update(msg)
 		return m, cmd
-		
+
 	case types.ProjectStructureChangedMsg:
 		m.LeftSidebar.Explorer.RefreshFromCore()
 		return m, nil
-		
+
 	case types.EndpointSelectedMsg, types.ProjectSelectedMsg:
 		// Broadcast to all major panels regardless of focus
 		_, cmd1 := m.Workspace.Update(msg)
 		_, cmd2 := m.LeftSidebar.Update(msg)
 		_, cmd3 := m.RightSidebar.Update(msg)
 		return m, tea.Batch(cmd1, cmd2, cmd3)
-		
+
 	case overlays.FilesLoadedMsg:
 		_, cmd := m.ImportSpec.Update(msg)
 		return m, cmd
@@ -253,7 +253,6 @@ paths:
 		}
 		return m, nil
 	}
-	
+
 	return m.routeToActive(msg)
 }
-

@@ -12,7 +12,7 @@ import (
 
 // WorkspaceModel represents the Middle Workspace Container.
 type WorkspaceModel struct {
-	tuiCtx    types.TUIContext
+	tuiCtx            types.TUIContext
 	Size              tea.WindowSizeMsg
 	IsFocused         bool
 	ApiTesterExpanded bool
@@ -51,7 +51,7 @@ func (m *WorkspaceModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.Size = msg
-		
+
 		tabSize := tea.WindowSizeMsg{Width: msg.Width, Height: 1}
 		_, cmd = m.Tabs.Update(tabSize)
 		cmds = append(cmds, cmd)
@@ -154,7 +154,7 @@ func (m *WorkspaceModel) View() string {
 		elements = append(elements, m.Tabs.View())
 	}
 	elements = append(elements, m.Editor.View(), statusBar)
-	
+
 	if m.ApiTesterExpanded {
 		elements = append(elements, m.ApiTester.View())
 	}

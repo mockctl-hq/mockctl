@@ -207,4 +207,3 @@ func TestApp_StrictValidation(t *testing.T) {
 		t.Fatalf("expected strict validation to be false after SaveSettingsConfig")
 	}
 }
-

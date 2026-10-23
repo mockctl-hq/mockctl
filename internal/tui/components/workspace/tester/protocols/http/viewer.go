@@ -148,15 +148,15 @@ func (m *HttpViewerModel) SetResponse(resp *TestResponse) {
 		m.Viewport.GotoTop()
 		return
 	}
-	
+
 	if resp.IsBinary {
 		m.Viewport.SetContent(resp.Body)
 		m.Viewport.GotoTop()
 		return
 	}
-	
+
 	content := resp.Body
-	
+
 	// Pretty print JSON
 	if len(content) > 0 && (strings.HasPrefix(content, "{") || strings.HasPrefix(content, "[")) {
 		var obj interface{}
@@ -167,7 +167,7 @@ func (m *HttpViewerModel) SetResponse(resp *TestResponse) {
 			}
 		}
 	}
-	
+
 	// Try chroma highlighting
 	if len(content) < 100*1024 { // PKS-008: 100KB limit
 		var buf strings.Builder
@@ -176,7 +176,7 @@ func (m *HttpViewerModel) SetResponse(resp *TestResponse) {
 			content = buf.String()
 		}
 	}
-	
+
 	m.Viewport.SetContent(content)
 	m.Viewport.GotoTop()
 }

@@ -11,12 +11,12 @@ func (m *ProjectTreeModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.Size = msg
 		return m, nil
-		
+
 	case tea.KeyMsg:
 		if !m.IsFocused {
 			return m, nil
 		}
-		
+
 		if len(m.VisibleNodes) == 0 {
 			return m, nil
 		}
@@ -46,7 +46,7 @@ func (m *ProjectTreeModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 			} else {
 				// It's an endpoint
 				m.SelectedID = node.ID
-				
+
 				// Find parent project by iterating backwards
 				projectName := ""
 				for i := m.ActiveIndex - 1; i >= 0; i-- {
@@ -55,7 +55,7 @@ func (m *ProjectTreeModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 						break
 					}
 				}
-				
+
 				return m, func() tea.Msg { return types.EndpointSelectedMsg{ProjectName: projectName, EndpointPath: node.ID} }
 			}
 		} else if msg.String() == "shift+left" {

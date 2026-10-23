@@ -54,7 +54,7 @@ func (m *DaemonCrashedModel) View() string {
 	footer := lipgloss.NewStyle().Foreground(types.DefaultTheme.Dim).Render("Press 'R' to Retry | 'q' to Quit")
 
 	content := lipgloss.JoinVertical(lipgloss.Center, title, "", body, "", errLog, "", footer)
-	
+
 	return lipgloss.Place(m.Size.Width, m.Size.Height, lipgloss.Center, lipgloss.Center, boxStyle.Render(content))
 }
 

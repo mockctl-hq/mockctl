@@ -191,17 +191,17 @@ func (m *HistoryModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.Size = msg
-		
+
 		innerWidth := msg.Width - 6
 		if innerWidth < 10 {
 			innerWidth = 10
 		}
-		
+
 		innerHeight := msg.Height - 2
 		if innerHeight < 5 {
 			innerHeight = 5
 		}
-		
+
 		m.Search.Width = innerWidth
 		// Header = title (1) + divider (1) = 2
 		// Search = search input (1) + empty line below (1) = 2
@@ -211,10 +211,10 @@ func (m *HistoryModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 		if vpHeight < 1 {
 			vpHeight = 1
 		}
-		
+
 		m.Viewport.Width = innerWidth
 		m.Viewport.Height = vpHeight
-		
+
 		m.refreshViewport()
 
 	case HistoryLoadedMsg:
@@ -245,7 +245,7 @@ func (m *HistoryModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 			}
 			return m, func() tea.Msg { return types.OverlayStateEnum(types.OverlayNone) }
 		}
-		
+
 		if key.Matches(msg, types.GlobalKeys.Quit) || msg.String() == "q" {
 			if !m.Search.Focused() {
 				return m, func() tea.Msg { return types.OverlayStateEnum(types.OverlayNone) }

@@ -29,7 +29,7 @@ func TestApiTesterModel_Layout(t *testing.T) {
 	model = newModel.(*tester.ApiTesterModel)
 
 	assert.Equal(t, 100, model.Size.Width)
-	
+
 	view := model.View()
 	assert.Contains(t, view, "HTTP/REST") // Protocol tab should be rendered
 }

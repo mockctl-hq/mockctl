@@ -5,10 +5,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mockctl-hq/mockctl/internal/runtime"
-	"github.com/mockctl-hq/mockctl/internal/tui/components/header"
 	"github.com/mockctl-hq/mockctl/internal/tui/components/footer"
-	"github.com/mockctl-hq/mockctl/internal/tui/components/sidebars/left"
-	"github.com/mockctl-hq/mockctl/internal/tui/components/sidebars/right"
+	"github.com/mockctl-hq/mockctl/internal/tui/components/header"
 	"github.com/mockctl-hq/mockctl/internal/tui/components/overlays"
 	"github.com/mockctl-hq/mockctl/internal/tui/components/overlays/header_tools/history"
 	"github.com/mockctl-hq/mockctl/internal/tui/components/overlays/header_tools/inspector"
@@ -16,6 +14,8 @@ import (
 	"github.com/mockctl-hq/mockctl/internal/tui/components/overlays/header_tools/profiler"
 	"github.com/mockctl-hq/mockctl/internal/tui/components/overlays/header_tools/settings"
 	"github.com/mockctl-hq/mockctl/internal/tui/components/overlays/system_prompts"
+	"github.com/mockctl-hq/mockctl/internal/tui/components/sidebars/left"
+	"github.com/mockctl-hq/mockctl/internal/tui/components/sidebars/right"
 	"github.com/mockctl-hq/mockctl/internal/tui/components/workspace"
 	"github.com/mockctl-hq/mockctl/internal/tui/types"
 )
@@ -23,10 +23,10 @@ import (
 // RootModel is the top-level BubbleTea model.
 // It manages the global layout, focus, and delegates events to child components.
 type RootModel struct {
-	Ctx               types.TUIContext
-	Size              tea.WindowSizeMsg
-	FocusRing         types.FocusRingEnum
-	ActiveOverlay     types.OverlayStateEnum
+	Ctx                 types.TUIContext
+	Size                tea.WindowSizeMsg
+	FocusRing           types.FocusRingEnum
+	ActiveOverlay       types.OverlayStateEnum
 	ApiTesterExpanded   bool
 	ColonVisible        bool
 	Animating           bool
@@ -44,7 +44,7 @@ type RootModel struct {
 	ScreenWarning  *system_prompts.ScreenWarningModel
 	DaemonCrashed  *system_prompts.DaemonCrashedModel
 	DeleteProject  *system_prompts.DeleteProjectModel
-	
+
 	Header       *header.HeaderModel
 	Footer       *footer.FooterModel
 	LeftSidebar  *left.LeftSidebarModel

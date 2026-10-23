@@ -22,7 +22,7 @@ type LeftSidebarModel struct {
 	Scaffold *inner.ScaffoldInputModel
 	Search   *shared.SearchModel
 	Explorer *body.ProjectTreeModel
-	
+
 	ActiveInnerFocus int // 0: Search, 1: Explorer, 2: Scaffold
 }
 
@@ -30,12 +30,12 @@ var _ types.Component = (*LeftSidebarModel)(nil)
 
 func NewLeftSidebarModel(ctx types.TUIContext) *LeftSidebarModel {
 	return &LeftSidebarModel{
-		tuiCtx:   ctx,
-		Icons:    icons.NewLeftIconsModel(ctx),
-		Header:   inner.NewInnerHeaderModel(ctx),
-		Scaffold: inner.NewScaffoldInputModel(ctx),
-		Search:   shared.NewSearchModel(),
-		Explorer: body.NewProjectTreeModel(ctx),
+		tuiCtx:           ctx,
+		Icons:            icons.NewLeftIconsModel(ctx),
+		Header:           inner.NewInnerHeaderModel(ctx),
+		Scaffold:         inner.NewScaffoldInputModel(ctx),
+		Search:           shared.NewSearchModel(),
+		Explorer:         body.NewProjectTreeModel(ctx),
 		ActiveInnerFocus: 1, // Default to explorer
 	}
 }
@@ -68,30 +68,30 @@ func (m *LeftSidebarModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 		m.Explorer.Update(tea.WindowSizeMsg{Width: innerPanelWidth, Height: msg.Height - 5})
 		m.Header.Update(innerSizeMsg)
 		return m, nil
-	
+
 	case tea.KeyMsg:
 		if !m.IsFocused || m.IsCollapsed {
 			return m, nil
 		}
-		
+
 		// If Scaffold is active, route exclusively to it
 		if m.Scaffold.Active {
 			_, cmd := m.Scaffold.Update(msg)
 			return m, cmd
 		}
-		
+
 		// If Search is active, route exclusively to it
 		if m.Search.Active {
 			_, cmd := m.Search.Update(msg)
 			return m, cmd
 		}
-		
+
 		// Shortcut to trigger Scaffold project
 		if msg.String() == "+" {
 			m.Scaffold.Show(true) // true = create project
 			return m, nil
 		}
-		
+
 		// Shortcut to trigger Search
 		if msg.String() == "/" {
 			m.Search.Active = true
@@ -150,7 +150,7 @@ func (m *LeftSidebarModel) View() string {
 	content := lipgloss.JoinHorizontal(lipgloss.Top, iconsStr, innerPanel)
 
 	return borderStyle.
-		Width(m.Size.Width - 1).
+		Width(m.Size.Width-1).
 		Height(m.Size.Height).
 		Border(lipgloss.NormalBorder(), false, true, false, false).
 		Render(content)

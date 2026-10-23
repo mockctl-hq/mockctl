@@ -27,7 +27,7 @@ type StateInspectorModel struct {
 	RootNodes   []*Node
 	FlatVisible []*Node
 	Cursor      int
-	
+
 	Error string
 }
 
@@ -48,13 +48,13 @@ func (m *StateInspectorModel) RefreshState(projectName string) {
 		m.Error = "No project selected."
 		return
 	}
-	
+
 	store := m.tuiCtx.Core.StateStore()
 	if store == nil {
 		m.Error = "StateStore not found for project."
 		return
 	}
-	
+
 	memStore, ok := store.(interface {
 		GetSnapshot() map[string]map[string]map[string]any
 	})
@@ -62,29 +62,34 @@ func (m *StateInspectorModel) RefreshState(projectName string) {
 		m.Error = "StateStore does not support GetSnapshot"
 		return
 	}
-	
+
 	snapshot := memStore.GetSnapshot()
-	
+
 	m.RootNodes = []*Node{}
-	
+
 	// Sort routes for stable rendering
 	var routes []string
 	for route := range snapshot {
 		routes = append(routes, route)
 	}
 	sort.Strings(routes)
-	
+
 	for _, route := range routes {
 		data := snapshot[route]
-		b, _ := json.Marshal(data) // simple marshal
-		
+		b, err := json.Marshal(data) // simple marshal
+		if err != nil {
+			continue
+		}
+
 		var parsed interface{}
-		json.Unmarshal(b, &parsed)
-		
+		if err := json.Unmarshal(b, &parsed); err != nil {
+			continue
+		}
+
 		node := buildNode(route, parsed, 0)
 		m.RootNodes = append(m.RootNodes, node)
 	}
-	
+
 	m.Error = ""
 	m.rebuildFlatList()
 }
@@ -94,9 +99,9 @@ func buildNode(key string, val interface{}, depth int) *Node {
 	if depth >= 5 {
 		return &Node{Key: key, Value: "{...}", Depth: depth}
 	}
-	
+
 	n := &Node{Key: key, Depth: depth}
-	
+
 	switch v := val.(type) {
 	case map[string]interface{}:
 		n.IsObject = true
@@ -130,7 +135,7 @@ func (m *StateInspectorModel) rebuildFlatList() {
 	for _, root := range m.RootNodes {
 		m.flatten(root)
 	}
-	
+
 	if m.Cursor >= len(m.FlatVisible) {
 		m.Cursor = len(m.FlatVisible) - 1
 	}

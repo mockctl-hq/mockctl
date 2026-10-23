@@ -4,11 +4,12 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/lipgloss"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/mockctl-hq/mockctl/internal/tui/shared"
 	"github.com/mockctl-hq/mockctl/internal/tui/types"
 )
@@ -104,7 +105,8 @@ func (m *ImportSpecModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 			}
 
 			// Read file
-			file, err := os.Open(path)
+			// #nosec G304 -- path is selected by developer from local spec file list
+			file, err := os.Open(filepath.Clean(path))
 			if err != nil {
 				m.ErrorMsg = "Failed to open file: " + err.Error()
 				return m, nil

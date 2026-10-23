@@ -2,7 +2,7 @@ package overlays
 
 import (
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -55,24 +55,37 @@ func (m *ImportSpecModel) Init(ctx types.TUIContext) tea.Cmd {
 
 func (m *ImportSpecModel) loadFilesCmd() tea.Cmd {
 	return func() tea.Msg {
-		home, _ := os.UserHomeDir()
-		if home == "" {
+		home, err := os.UserHomeDir()
+		if err != nil || home == "" {
 			return nil
 		}
-		// Fast find for yaml files up to 5 levels deep
-		cmd := exec.Command("find", home, "-maxdepth", "5", "-type", "f", "-name", "*.yaml", "-o", "-name", "*.yml")
-		out, err := cmd.Output()
-		if err != nil {
-			return nil
-		}
+		cleanHome := filepath.Clean(home)
+		homeSepCount := strings.Count(cleanHome, string(filepath.Separator))
 
-		lines := strings.Split(string(out), "\n")
 		var files []string
-		for _, l := range lines {
-			if strings.TrimSpace(l) != "" {
-				files = append(files, l)
+		_ = filepath.WalkDir(cleanHome, func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return nil
 			}
-		}
+			depth := strings.Count(path, string(filepath.Separator)) - homeSepCount
+			if depth > 5 {
+				if d.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			if d.IsDir() && strings.HasPrefix(d.Name(), ".") && path != cleanHome {
+				return filepath.SkipDir
+			}
+			if !d.IsDir() {
+				ext := strings.ToLower(filepath.Ext(d.Name()))
+				if ext == ".yaml" || ext == ".yml" {
+					files = append(files, path)
+				}
+			}
+			return nil
+		})
+
 		return FilesLoadedMsg{Files: files}
 	}
 }

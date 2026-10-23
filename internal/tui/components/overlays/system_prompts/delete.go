@@ -94,14 +94,14 @@ func (m *DeleteProjectModel) View() string {
 	title := lipgloss.NewStyle().Bold(true).Foreground(types.DefaultTheme.Error).Render("Delete Project?")
 	warning := "This action cannot be undone. All endpoints and settings will be permanently lost."
 	prompt := "Please type '" + lipgloss.NewStyle().Bold(true).Foreground(types.DefaultTheme.Warning).Render(m.ProjectName) + "' to confirm."
-	
+
 	errStr := ""
 	if m.ErrorMsg != "" {
 		errStr = lipgloss.NewStyle().Foreground(types.DefaultTheme.Error).Render(m.ErrorMsg)
 	}
 
 	content := lipgloss.JoinVertical(lipgloss.Center, title, "", warning, prompt, "", m.Input.View(), errStr)
-	
+
 	return lipgloss.Place(m.Size.Width, m.Size.Height, lipgloss.Center, lipgloss.Center, boxStyle.Render(content))
 }
 

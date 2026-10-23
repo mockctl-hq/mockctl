@@ -9,7 +9,7 @@ import (
 )
 
 type ScaffoldSubmitMsg struct {
-	Value    string
+	Value     string
 	IsProject bool // true if creating project, false if creating endpoint
 }
 
@@ -27,7 +27,7 @@ func NewScaffoldInputModel(ctx types.TUIContext) *ScaffoldInputModel {
 	ti.Placeholder = "Name..."
 	ti.CharLimit = 100
 	ti.Prompt = "> "
-	
+
 	return &ScaffoldInputModel{
 		tuiCtx: ctx,
 		Input:  ti,

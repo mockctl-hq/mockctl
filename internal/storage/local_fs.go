@@ -2,6 +2,7 @@ package storage
 
 import (
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/mockctl-hq/mockctl/internal/shared"
@@ -19,12 +20,14 @@ func NewLocalFileSystem() *LocalFileSystem {
 
 // ReadFile reads the named file and returns the contents.
 func (fs *LocalFileSystem) ReadFile(name string) ([]byte, error) {
-	return os.ReadFile(name)
+	// #nosec G304 -- LocalFileSystem wraps disk access for application core
+	return os.ReadFile(filepath.Clean(name))
 }
 
 // WriteFile writes data to a file named by filename.
 func (fs *LocalFileSystem) WriteFile(name string, data []byte, perm os.FileMode) error {
-	return os.WriteFile(name, data, perm)
+	// #nosec G304 -- LocalFileSystem wraps disk access for application core
+	return os.WriteFile(filepath.Clean(name), data, perm)
 }
 
 // MkdirAll creates a directory named path, along with any necessary parents.

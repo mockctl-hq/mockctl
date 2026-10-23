@@ -90,12 +90,11 @@ func (a *App) UpdateProjectSpec(ctx context.Context, name string, filename strin
 	return nil
 }
 
-
 func (a *App) compileEngine(ctx context.Context, proj project.Project, specModel *spec.SpecModel) (*runtime.RuntimeEngine, error) {
 	// Setup dependencies
 	vp := data.NewFakeValueProvider()
 	clock := shared.NewRealClock()
-	
+
 	// Inject standard chaos evaluator
 	chaos := runtime.NewStandardChaosEvaluator(clock)
 	existingEngine := a.gateway.GetEngine(proj.Name)

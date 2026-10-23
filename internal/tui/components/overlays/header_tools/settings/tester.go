@@ -44,13 +44,13 @@ func (m *TesterTabModel) View() string {
 	if m.FollowRedirects {
 		redirStr = "[x] Follow HTTP Redirects"
 	}
-	
+
 	if m.ActiveField == 0 {
 		redirStr = activeStyle.Render(redirStr)
 	} else {
 		redirStr = inactiveStyle.Render(redirStr)
 	}
-	
+
 	helpStr := dimStyle.Render("Press Space/Enter to toggle")
 
 	return lipgloss.JoinVertical(lipgloss.Left, redirStr, "", helpStr)

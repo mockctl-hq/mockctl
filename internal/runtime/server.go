@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync/atomic"
 	"time"
 
@@ -113,14 +114,16 @@ func (s *HTTPServer) mockCorsMiddleware(next http.Handler) http.Handler {
 // loggerMiddleware integrates with shared.Logger and scrubs Authorization headers (PKS-028)
 func (s *HTTPServer) loggerMiddleware(next http.Handler) http.Handler {
 	// Initialize a dedicated logger for HTTP requests
-	userHome, _ := os.UserHomeDir()
-	reqLogPath := userHome + "/.mockctl/requests.log"
-	
-	// Create or append to requests.log
-	logFile, err := os.OpenFile(reqLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	var reqLogger *log.Logger
-	if err == nil {
-		reqLogger = log.New(logFile, "", log.Ldate|log.Ltime)
+	if userHome, err := os.UserHomeDir(); err == nil && userHome != "" {
+		reqLogDir := filepath.Join(userHome, ".mockctl")
+		_ = os.MkdirAll(reqLogDir, 0755)
+		reqLogPath := filepath.Join(reqLogDir, "requests.log")
+		// #nosec G302 G304 -- reqLogPath is deterministic in ~/.mockctl and uses secure 0600 permissions
+		logFile, err := os.OpenFile(reqLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		if err == nil {
+			reqLogger = log.New(logFile, "", log.Ldate|log.Ltime)
+		}
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +139,7 @@ func (s *HTTPServer) loggerMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(ww, r)
 
 		if reqLogger != nil {
-			logStr := fmt.Sprintf("HTTP %s %s | status: %d | bytes: %d | %dms", 
+			logStr := fmt.Sprintf("HTTP %s %s | status: %d | bytes: %d | %dms",
 				r.Method, r.URL.Path, ww.Status(), ww.BytesWritten(), time.Since(start).Milliseconds())
 			reqLogger.Println(logStr)
 		}

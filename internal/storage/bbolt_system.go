@@ -165,7 +165,7 @@ func (b *BBoltSystemStore) GetTelemetryHistory(ctx context.Context, limit int) (
 		if bucket == nil {
 			return shared.ErrNotFound
 		}
-		
+
 		c := bucket.Cursor()
 		count := 0
 		// Iterate backwards from the newest log to get the most recent `limit` logs
@@ -178,12 +178,12 @@ func (b *BBoltSystemStore) GetTelemetryHistory(ctx context.Context, limit int) (
 		}
 		return nil
 	})
-	
+
 	// Since we got the newest first, reverse them to be in chronological order (oldest first)
 	for i, j := 0, len(results)-1; i < j; i, j = i+1, j-1 {
 		results[i], results[j] = results[j], results[i]
 	}
-	
+
 	return results, err
 }
 

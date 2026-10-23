@@ -78,13 +78,17 @@ func (m *TabBarModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 		if len(m.Tabs) > 1 {
 			if key.Matches(msg, types.GlobalKeys.NextTab) {
 				m.ActiveIndex = (m.ActiveIndex + 1) % len(m.Tabs)
-				return m, func() tea.Msg { return types.ProjectSelectedMsg{ProjectName: m.Tabs[m.ActiveIndex].ProjectName, FileName: m.Tabs[m.ActiveIndex].FileName} }
+				return m, func() tea.Msg {
+					return types.ProjectSelectedMsg{ProjectName: m.Tabs[m.ActiveIndex].ProjectName, FileName: m.Tabs[m.ActiveIndex].FileName}
+				}
 			} else if key.Matches(msg, types.GlobalKeys.PrevTab) {
 				m.ActiveIndex--
 				if m.ActiveIndex < 0 {
 					m.ActiveIndex = len(m.Tabs) - 1
 				}
-				return m, func() tea.Msg { return types.ProjectSelectedMsg{ProjectName: m.Tabs[m.ActiveIndex].ProjectName, FileName: m.Tabs[m.ActiveIndex].FileName} }
+				return m, func() tea.Msg {
+					return types.ProjectSelectedMsg{ProjectName: m.Tabs[m.ActiveIndex].ProjectName, FileName: m.Tabs[m.ActiveIndex].FileName}
+				}
 			}
 		}
 
@@ -95,7 +99,9 @@ func (m *TabBarModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 					if m.ActiveIndex >= len(m.Tabs) {
 						m.ActiveIndex = len(m.Tabs) - 1
 					}
-					return m, func() tea.Msg { return types.ProjectSelectedMsg{ProjectName: m.Tabs[m.ActiveIndex].ProjectName, FileName: m.Tabs[m.ActiveIndex].FileName} }
+					return m, func() tea.Msg {
+						return types.ProjectSelectedMsg{ProjectName: m.Tabs[m.ActiveIndex].ProjectName, FileName: m.Tabs[m.ActiveIndex].FileName}
+					}
 				} else {
 					m.ActiveIndex = 0
 					return m, func() tea.Msg { return types.ProjectSelectedMsg{ProjectName: "", FileName: ""} }
@@ -138,13 +144,13 @@ func (m *TabBarModel) View() string {
 
 	for i, tab := range m.Tabs {
 		tabText := tab.FileName
-		
+
 		// Extract just the filename for the tab so it doesn't take up too much space
 		parts := strings.Split(tabText, "/")
 		if len(parts) > 0 {
 			tabText = parts[len(parts)-1]
 		}
-		
+
 		if tab.IsDirty {
 			tabText += "*"
 		}
@@ -183,7 +189,7 @@ func (m *TabBarModel) View() string {
 
 	// Join all tabs horizontally
 	allTabsStr := lipgloss.JoinHorizontal(lipgloss.Bottom, renderedTabs...)
-	
+
 	// Add bottom border to the rest of the empty space
 	emptySpaceWidth := m.Size.Width - lipgloss.Width(allTabsStr)
 	if emptySpaceWidth > 0 {
@@ -208,17 +214,17 @@ func (m *TabBarModel) View() string {
 		activeTab := m.Tabs[idx]
 		leftToolbar := lipgloss.NewStyle().Foreground(types.DefaultTheme.Text).Padding(0, 1).Render(activeTab.ProjectName + " / " + activeTab.FileName)
 		rightToolbar := lipgloss.NewStyle().Foreground(types.DefaultTheme.Dim).Padding(0, 1).Render("[Import: Ctrl+O]")
-		
+
 		padding := m.Size.Width - lipgloss.Width(leftToolbar) - lipgloss.Width(rightToolbar)
 		if padding < 0 {
 			padding = 0
 		}
-		
+
 		spaces := ""
 		for i := 0; i < padding; i++ {
 			spaces += " "
 		}
-		
+
 		toolbarContent := leftToolbar + spaces + rightToolbar
 		toolbarStr = lipgloss.NewStyle().
 			Width(m.Size.Width).

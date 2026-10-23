@@ -39,10 +39,10 @@ func (m *InnerHeaderModel) View() string {
 		Foreground(types.DefaultTheme.Text).
 		Border(lipgloss.NormalBorder(), false, false, true, false).
 		BorderForeground(types.DefaultTheme.Dim)
-		
+
 	title := m.Title
 	addIcon := "[+]"
-	
+
 	if m.IsFocused {
 		addIcon = lipgloss.NewStyle().Foreground(types.DefaultTheme.Primary).Render(addIcon)
 	}
@@ -52,12 +52,12 @@ func (m *InnerHeaderModel) View() string {
 	if padding < 0 {
 		padding = 0
 	}
-	
+
 	spaces := ""
 	for i := 0; i < padding; i++ {
 		spaces += " "
 	}
-	
+
 	return style.Render(title + spaces + addIcon)
 }
 

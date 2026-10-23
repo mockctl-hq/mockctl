@@ -35,7 +35,7 @@ func (m *ApiTesterModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.Size = msg
 		m.HttpTester.Update(tea.WindowSizeMsg{
-			Width:  msg.Width - 2, // minus border
+			Width:  msg.Width - 2,  // minus border
 			Height: msg.Height - 3, // minus protocol tab (1) and borders (2)
 		})
 	}
@@ -53,12 +53,12 @@ func (m *ApiTesterModel) View() string {
 		Foreground(types.DefaultTheme.Bg).
 		Padding(0, 1).
 		Render(" HTTP/REST ")
-		
+
 	border := types.GlobalStyles.UnfocusedBorder
 	if m.IsFocused {
 		border = types.GlobalStyles.FocusedBorder
 	}
-	
+
 	testerStr := m.HttpTester.View()
 	return border.Render(lipgloss.JoinVertical(lipgloss.Left, protocolTab, testerStr))
 }

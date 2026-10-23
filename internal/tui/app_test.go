@@ -223,4 +223,3 @@ func TestRootModel_Settings_Persistence(t *testing.T) {
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m)
 }
-

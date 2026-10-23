@@ -135,9 +135,9 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("failed to get user home dir: %w", err)
 	}
 	mockctlDir := filepath.Join(userHome, ".mockctl")
-	
+
 	fs := storage.NewLocalFileSystem()
-	
+
 	if err := fs.MkdirAll(mockctlDir, 0750); err != nil {
 		return nil, fmt.Errorf("failed to create .mockctl dir: %w", err)
 	}
@@ -176,7 +176,7 @@ func NewApp(ctx context.Context) (*App, error) {
 
 	gateway := runtime.NewProjectGateway()
 	broker := runtime.NewEventBroker()
-	
+
 	a := &App{
 		logger:      logger,
 		fileSystem:  fs,
@@ -252,7 +252,7 @@ func (a *App) Shutdown(ctx context.Context) error {
 			a.logger.Error("HTTP Server forced to shutdown", err)
 		}
 	}
-	
+
 	if a.systemStore != nil {
 		if dbErr := a.systemStore.Close(ctx); dbErr != nil && err == nil {
 			err = dbErr
@@ -269,9 +269,9 @@ func StartDaemon(ctx context.Context, port int) error {
 	if err != nil {
 		return err
 	}
-	
+
 	serverErrChan := a.ServeInBackground(ctx, port)
-	
+
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 

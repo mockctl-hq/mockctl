@@ -32,7 +32,7 @@ func TestHeaderModel_Update(t *testing.T) {
 	newModel, _ := model.Update(types.BlinkMsg{})
 	model = newModel.(*header.HeaderModel)
 	assert.False(t, model.Logo.ColonVisible)
-	
+
 	view := model.View()
 	assert.Contains(t, view, "𝗠𝗼𝗰𝗸")
 	assert.Contains(t, view, "Inspector")

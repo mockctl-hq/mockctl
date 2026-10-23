@@ -62,7 +62,7 @@ func (m *ThemeTabModel) View() string {
 		themeName = types.ThemeList[m.ActiveTheme].Name
 	}
 	themeStr := "Active Theme: [" + themeName + "]"
-	
+
 	if m.ActiveField == 0 {
 		themeStr = activeStyle.Render(themeStr)
 	} else {
@@ -73,7 +73,7 @@ func (m *ThemeTabModel) View() string {
 	if m.Animations {
 		animStr = "[x] Enable UI Animations"
 	}
-	
+
 	if m.ActiveField == 1 {
 		animStr = activeStyle.Render(animStr)
 	} else {

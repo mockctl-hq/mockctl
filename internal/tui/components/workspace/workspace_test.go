@@ -32,7 +32,7 @@ func TestWorkspaceModel_Layout(t *testing.T) {
 
 	// Verify that height was distributed properly to Editor
 	assert.Equal(t, 100, model.Size.Width)
-	
+
 	view := model.View()
 	assert.Contains(t, view, "Ln") // Status bar should be rendered
 }
@@ -273,5 +273,8 @@ func TestWorkspaceModel_CloseTab_RemovesTabCompletely(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	goleak.VerifyTestMain(m, goleak.IgnoreAnyFunction("github.com/dlclark/regexp2/v2.runClock"))
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreAnyFunction("github.com/dlclark/regexp2.runClock"),
+		goleak.IgnoreAnyFunction("github.com/dlclark/regexp2/v2.runClock"),
+	)
 }

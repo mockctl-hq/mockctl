@@ -68,4 +68,3 @@ func ReadFromClipboard() (string, error) {
 		return "", fmt.Errorf("clipboard read timed out")
 	}
 }
-

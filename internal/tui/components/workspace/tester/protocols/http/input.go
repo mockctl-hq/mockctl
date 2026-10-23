@@ -11,12 +11,12 @@ type HttpInputModel struct {
 	tuiCtx types.TUIContext
 	Size   tea.WindowSizeMsg
 
-	Method      string
-	PathInput   textinput.Model
-	IsFocused   bool
-	
+	Method    string
+	PathInput textinput.Model
+	IsFocused bool
+
 	// Local History
-	History []string
+	History    []string
 	HistoryIdx int
 }
 
@@ -69,7 +69,7 @@ func (m *HttpInputModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 				}
 				return m, nil
 			}
-			
+
 			m.PathInput, cmd = m.PathInput.Update(msg)
 		}
 	}

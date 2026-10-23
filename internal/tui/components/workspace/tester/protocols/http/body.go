@@ -13,9 +13,9 @@ type HttpBodyModel struct {
 
 	Input     textarea.Model
 	IsFocused bool
-	
+
 	// Local History
-	History []string
+	History    []string
 	HistoryIdx int
 }
 
@@ -25,7 +25,7 @@ func NewHttpBodyModel(ctx types.TUIContext) *HttpBodyModel {
 	ta := textarea.New()
 	ta.Placeholder = "{\n  \"key\": \"value\"\n}"
 	ta.ShowLineNumbers = false
-	ta.Prompt = "" // Remove default thick vertical line prompt
+	ta.Prompt = ""            // Remove default thick vertical line prompt
 	ta.CharLimit = 100 * 1024 // 100KB max for manual entry
 
 	return &HttpBodyModel{
@@ -63,7 +63,7 @@ func (m *HttpBodyModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 				}
 				return m, nil
 			}
-			
+
 			m.Input, cmd = m.Input.Update(msg)
 		}
 	}
@@ -73,13 +73,13 @@ func (m *HttpBodyModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 func (m *HttpBodyModel) View() string {
 	content := m.Input.View()
 	style := lipgloss.NewStyle().
-		Width(m.Size.Width - 2). // Account for left border and padding
+		Width(m.Size.Width-2). // Account for left border and padding
 		Height(m.Size.Height).
-		MaxWidth(m.Size.Width - 2).
+		MaxWidth(m.Size.Width-2).
 		MaxHeight(m.Size.Height).
 		Border(lipgloss.NormalBorder(), false, false, false, true).
 		PaddingLeft(1)
-		
+
 	if m.IsFocused {
 		style = style.BorderForeground(types.DefaultTheme.Primary)
 	} else {

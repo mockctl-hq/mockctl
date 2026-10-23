@@ -206,9 +206,9 @@ func TestRootModel_SidebarToggling_CtrlB_CtrlE(t *testing.T) {
 	// View renders without panicking and keeps icons visible even when drawers collapsed
 	view := root.View()
 	assert.NotEmpty(t, view)
-	assert.Contains(t, view, "📁") // Left icons strip remains visible
-	assert.Contains(t, view, "🌀") // Right icons strip remains visible
-	assert.NotContains(t, root.LeftSidebar.View(), "Projects") // Inner explorer drawer is collapsed
+	assert.Contains(t, view, "📁")                                     // Left icons strip remains visible
+	assert.Contains(t, view, "🌀")                                     // Right icons strip remains visible
+	assert.NotContains(t, root.LeftSidebar.View(), "Projects")        // Inner explorer drawer is collapsed
 	assert.NotContains(t, root.RightSidebar.View(), "Chaos Controls") // Inner right drawer is collapsed
 
 	// Ctrl+B toggles left sidebar back on (expanded)

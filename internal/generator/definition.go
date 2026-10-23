@@ -14,7 +14,7 @@ type EndpointHandler struct {
 	Path             string
 	PathParams       []string                 // e.g., ["id"] for /users/{id}
 	QueryParams      []string                 // Expected query parameters
-	RequestValidator spec.SchemaValidator    // OpenAPI schema validator for request payloads
+	RequestValidator spec.SchemaValidator     // OpenAPI schema validator for request payloads
 	Responses        map[int]ResponseTemplate // Maps HTTP status (e.g. 200, 404) to its template
 }
 
@@ -24,4 +24,3 @@ type ResponseTemplate struct {
 	Body       any
 	IsOverride bool
 }
-

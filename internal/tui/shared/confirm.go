@@ -15,11 +15,11 @@ type ConfirmResultMsg struct {
 
 // ConfirmModel handles reusable Yes/No modals.
 type ConfirmModel struct {
-	tuiCtx    types.TUIContext
-	Message   string
-	ID        string
-	Active    bool
-	Selected  bool // true = Yes, false = No
+	tuiCtx   types.TUIContext
+	Message  string
+	ID       string
+	Active   bool
+	Selected bool // true = Yes, false = No
 }
 
 func NewConfirmModel(ctx types.TUIContext) *ConfirmModel {
@@ -54,7 +54,7 @@ func (m *ConfirmModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 			m.Hide()
 			return m, func() tea.Msg { return ConfirmResultMsg{Confirmed: false, ID: m.ID} }
 		}
-		
+
 		switch msg.String() {
 		case "left", "h":
 			m.Selected = true
@@ -100,9 +100,9 @@ func (m *ConfirmModel) View() string {
 	}
 
 	buttons := lipgloss.JoinHorizontal(lipgloss.Center, yesBtn, "   ", noBtn)
-	
+
 	content := lipgloss.JoinVertical(lipgloss.Center, msgStyle, "", buttons)
-	
+
 	return boxStyle.Render(content)
 }
 

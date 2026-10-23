@@ -56,7 +56,7 @@ func (m *ToastModel) View() string {
 	if !m.Visible {
 		return ""
 	}
-	
+
 	style := lipgloss.NewStyle().
 		Foreground(types.DefaultTheme.Text).
 		Padding(0, 1)
@@ -65,7 +65,7 @@ func (m *ToastModel) View() string {
 		style = style.Background(types.DefaultTheme.Error)
 		return style.Render("❌ " + m.Message)
 	}
-	
+
 	style = style.Background(types.DefaultTheme.Success)
 	return style.Render("✅ " + m.Message)
 }

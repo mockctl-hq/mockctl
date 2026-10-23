@@ -43,7 +43,7 @@ func (m *InnerHeaderModel) View() string {
 		Foreground(types.DefaultTheme.Text).
 		Border(lipgloss.NormalBorder(), false, false, true, false).
 		BorderForeground(types.DefaultTheme.Dim)
-		
+
 	return style.Render(m.Title)
 }
 

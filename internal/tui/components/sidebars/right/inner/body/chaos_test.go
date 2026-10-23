@@ -137,4 +137,3 @@ func TestChaosControlModel_RealtimeAutoSyncWithoutEnter(t *testing.T) {
 	assert.Contains(t, view, "[x] Enable Chaos")
 	assert.Contains(t, view, "Delay (ms):")
 }
-

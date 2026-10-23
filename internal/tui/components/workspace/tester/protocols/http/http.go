@@ -30,10 +30,10 @@ type HttpTesterModel struct {
 	Viewer  *HttpViewerModel
 	Client  *Client
 
-	FocusRing  HttpFocusEnum
-	IsFocused  bool
-	ActiveTab  int // 0: Body, 1: Headers
-	
+	FocusRing HttpFocusEnum
+	IsFocused bool
+	ActiveTab int // 0: Body, 1: Headers
+
 	// Cancellation context for ghost request prevention
 	cancelReq context.CancelFunc
 
@@ -145,13 +145,13 @@ func (m *HttpTesterModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 			if key.Matches(msg, types.GlobalKeys.ExecuteTest) || isEnterInInput {
 				m.Input.PushHistory()
 				m.Body.PushHistory()
-				
-				// PKS-008: context cancellation 
+
+				// PKS-008: context cancellation
 				ctx, cancel := context.WithCancel(context.Background())
 				m.cancelReq = cancel
-				
+
 				inputVal := strings.TrimSpace(m.Input.PathInput.Value())
-				
+
 				var url string
 				if strings.HasPrefix(inputVal, "http://") || strings.HasPrefix(inputVal, "https://") {
 					url = inputVal
@@ -165,13 +165,13 @@ func (m *HttpTesterModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 					}
 					url = fmt.Sprintf("http://localhost:%d%s", m.tuiCtx.ActivePort, inputVal)
 				}
-				
+
 				method := m.Input.Method
 				body := m.Body.Input.Value()
 				headers := m.Headers.Input.Value()
-				
+
 				spinCmd := m.Viewer.SetLoading(true)
-				
+
 				return m, tea.Batch(
 					spinCmd,
 					func() tea.Msg {
@@ -193,7 +193,7 @@ func (m *HttpTesterModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 				_, cmd := m.Viewer.Update(msg)
 				cmds = append(cmds, cmd)
 			}
-			
+
 			switch m.FocusRing {
 			case FocusInput:
 				_, cmd := m.Input.Update(msg)

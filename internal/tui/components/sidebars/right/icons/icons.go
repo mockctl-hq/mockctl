@@ -66,7 +66,7 @@ func (m *RightIconsModel) View() string {
 	inactiveStyle := lipgloss.NewStyle().Foreground(types.DefaultTheme.Dim)
 
 	iconsStr := []string{" 🌀 ", " 💻 ", " 🟣 "}
-	
+
 	var rendered []string
 	for i, icon := range iconsStr {
 		if i == m.ActiveIndex {

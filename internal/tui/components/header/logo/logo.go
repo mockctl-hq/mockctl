@@ -7,8 +7,8 @@ import (
 )
 
 type LogoModel struct {
-	tuiCtx        types.TUIContext
-	ColonVisible  bool
+	tuiCtx       types.TUIContext
+	ColonVisible bool
 }
 
 func NewLogoModel(ctx types.TUIContext) *LogoModel {

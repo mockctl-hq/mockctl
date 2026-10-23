@@ -19,11 +19,11 @@ type GlobalLogsModel struct {
 
 	Viewport viewport.Model
 	Search   textinput.Model
-	
+
 	Lines    []string
 	mu       sync.RWMutex
 	AutoTail bool
-	
+
 	lastFileContent string
 }
 
@@ -33,7 +33,7 @@ func NewGlobalLogsModel(ctx types.TUIContext) *GlobalLogsModel {
 	vp := viewport.New(0, 0)
 	ti := textinput.New()
 	ti.Placeholder = "Search logs..."
-	
+
 	return &GlobalLogsModel{
 		tuiCtx:   ctx,
 		Viewport: vp,
@@ -50,12 +50,12 @@ func (m *GlobalLogsModel) Init(ctx types.TUIContext) tea.Cmd {
 func (m *GlobalLogsModel) AddLogLine(line string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.Lines = append(m.Lines, shared.SanitizeANSI(line))
 	if len(m.Lines) > 1000 {
 		m.Lines = m.Lines[1:] // Ring buffer
 	}
-	
+
 	m.refreshViewport()
 }
 
@@ -66,7 +66,7 @@ func (m *GlobalLogsModel) RefreshFromDisk() {
 	bytes, err := m.tuiCtx.Core.GetRequestsLogContent()
 	if err == nil && len(bytes) > 0 {
 		content := strings.TrimRight(string(bytes), "\n")
-		
+
 		m.mu.Lock()
 		if content == m.lastFileContent {
 			m.mu.Unlock()
@@ -80,7 +80,7 @@ func (m *GlobalLogsModel) RefreshFromDisk() {
 		if len(lines) > 1000 {
 			lines = lines[len(lines)-1000:]
 		}
-		
+
 		m.mu.Lock()
 		m.Lines = lines
 		m.refreshViewport()
@@ -103,13 +103,13 @@ func parseLogLine(line string, width int) string {
 			if len(reqInfo) == 2 {
 				method := reqInfo[0]
 				path := reqInfo[1]
-				
+
 				status := strings.TrimPrefix(parts[1], "status: ")
 				bytesStr := strings.TrimPrefix(parts[2], "bytes: ")
 				latency := parts[3]
-				
+
 				timeStyle := lipgloss.NewStyle().Foreground(types.DefaultTheme.Dim).Width(10)
-				
+
 				methodStyle := lipgloss.NewStyle().Foreground(types.DefaultTheme.Secondary).Bold(true).Width(7)
 				if method == "GET" {
 					methodStyle = methodStyle.Foreground(types.DefaultTheme.Success)
@@ -120,27 +120,27 @@ func parseLogLine(line string, width int) string {
 				} else if method == "PUT" || method == "PATCH" {
 					methodStyle = methodStyle.Foreground(types.DefaultTheme.Warning)
 				}
-				
+
 				pathStyle := lipgloss.NewStyle().Foreground(types.DefaultTheme.Text).Width(pathWidth)
-				
+
 				statusStyle := lipgloss.NewStyle().Foreground(types.DefaultTheme.Success).Width(8)
 				if strings.HasPrefix(status, "4") || strings.HasPrefix(status, "5") {
 					statusStyle = statusStyle.Foreground(types.DefaultTheme.Error)
 				}
-				
+
 				bytesStyle := lipgloss.NewStyle().Foreground(types.DefaultTheme.Dim).Width(10).Align(lipgloss.Right)
 				latencyStyle := lipgloss.NewStyle().Foreground(types.DefaultTheme.Dim).Width(10).Align(lipgloss.Right)
-				
+
 				timeDisplay := timestamp
 				if len(timestamp) > 10 {
 					timeDisplay = timestamp[11:] // Strip date "YYYY/MM/DD "
 				}
-				
+
 				if len(path) > pathWidth {
 					path = path[:pathWidth-3] + "..."
 				}
-				
-				return fmt.Sprintf("%s │ %s │ %s │ %s │ %s │ %s", 
+
+				return fmt.Sprintf("%s │ %s │ %s │ %s │ %s │ %s",
 					timeStyle.Render(timeDisplay),
 					methodStyle.Render(method),
 					pathStyle.Render(path),

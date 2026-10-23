@@ -90,7 +90,7 @@ func (m *EditorTabModel) View() string {
 	} else {
 		fmtStr = inactiveStyle.Render(fmtStr)
 	}
-	
+
 	helpStr := dimStyle.Render("Press Space/Enter to toggle")
 
 	return lipgloss.JoinVertical(lipgloss.Left, tabStr, "", wrapStr, "", fmtStr, "", helpStr)

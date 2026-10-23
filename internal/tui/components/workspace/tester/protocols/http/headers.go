@@ -21,7 +21,7 @@ func NewHttpHeadersModel(ctx types.TUIContext) *HttpHeadersModel {
 	ta := textarea.New()
 	ta.Placeholder = "Authorization: Bearer token\nX-Custom: value"
 	ta.ShowLineNumbers = false
-	ta.Prompt = "" // Remove default thick vertical line prompt
+	ta.Prompt = ""           // Remove default thick vertical line prompt
 	ta.CharLimit = 10 * 1024 // 10KB max
 
 	return &HttpHeadersModel{
@@ -52,13 +52,13 @@ func (m *HttpHeadersModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 func (m *HttpHeadersModel) View() string {
 	content := m.Input.View()
 	style := lipgloss.NewStyle().
-		Width(m.Size.Width - 2). // Account for left border and padding
+		Width(m.Size.Width-2). // Account for left border and padding
 		Height(m.Size.Height).
-		MaxWidth(m.Size.Width - 2).
+		MaxWidth(m.Size.Width-2).
 		MaxHeight(m.Size.Height).
 		Border(lipgloss.NormalBorder(), false, false, false, true).
 		PaddingLeft(1)
-		
+
 	if m.IsFocused {
 		style = style.BorderForeground(types.DefaultTheme.Primary)
 	} else {

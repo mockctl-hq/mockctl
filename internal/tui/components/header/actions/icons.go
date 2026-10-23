@@ -10,7 +10,6 @@ type OverlayToggleMsg struct {
 	OverlayType types.OverlayStateEnum
 }
 
-
 type ActionIconsModel struct {
 	tuiCtx      types.TUIContext
 	IsFocused   bool
@@ -74,7 +73,7 @@ func (m *ActionIconsModel) View() string {
 	inactiveStyle := lipgloss.NewStyle().Foreground(types.DefaultTheme.Dim)
 
 	iconsStr := []string{"[ 🔍 Inspector ]", "[ ⏳ History ]", "[ 📜 Logs ]", "[ 📊 Profiler ]", "[ ⚙️ Settings ]"}
-	
+
 	var rendered []string
 	for i, icon := range iconsStr {
 		if m.IsFocused && i == m.ActiveIndex {

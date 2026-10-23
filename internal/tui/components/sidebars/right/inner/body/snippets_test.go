@@ -24,7 +24,7 @@ func TestCodeSnippetsModel_DynamicPort(t *testing.T) {
 func TestCodeSnippetsModel_UniversalPathInterpolation(t *testing.T) {
 	model := body.NewCodeSnippetsModel(types.TUIContext{ActivePort: 8080})
 	model.ActiveEndpoint = "GET /stores/{storeId}/pets/{petId}/orders/{orderGuid}"
-	
+
 	snippet := model.GenerateSnippet()
 	assert.Contains(t, snippet, "/stores/1/pets/1/orders/1")
 	assert.NotContains(t, snippet, "{storeId}")

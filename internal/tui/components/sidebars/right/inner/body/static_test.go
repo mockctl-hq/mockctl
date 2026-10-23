@@ -118,4 +118,3 @@ func TestOverridesModel_BadgeUpdatesWithSyntaxError(t *testing.T) {
 	model.Input.SetValue(`{"test": 123`)
 	assert.Contains(t, model.View(), "⚠️ Invalid JSON")
 }
-

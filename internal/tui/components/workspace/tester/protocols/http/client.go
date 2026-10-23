@@ -95,18 +95,18 @@ func (c *Client) FollowRedirectsEnabled() bool {
 // ExecuteRequest runs the request and prevents leaks/DoS.
 func (c *Client) ExecuteRequest(ctx context.Context, method, url string, headers string, rawBody string) *TestResponse {
 	start := time.Now()
-	
+
 	// Create request
 	var bodyReader io.Reader
 	if rawBody != "" {
 		bodyReader = bytes.NewReader([]byte(rawBody))
 	}
-	
+
 	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
 	if err != nil {
 		return &TestResponse{Error: err}
 	}
-	
+
 	// Parse manual headers (Key: Value)
 	if headers != "" {
 		lines := strings.Split(headers, "\n")
@@ -117,7 +117,7 @@ func (c *Client) ExecuteRequest(ctx context.Context, method, url string, headers
 			}
 		}
 	}
-	
+
 	// Auto-infer JSON if no content-type provided
 	if req.Header.Get("Content-Type") == "" {
 		if method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch {
@@ -132,7 +132,7 @@ func (c *Client) ExecuteRequest(ctx context.Context, method, url string, headers
 	// Execute
 	resp, err := c.httpClient.Do(req)
 	latency := time.Since(start)
-	
+
 	if err != nil {
 		return &TestResponse{Error: err, Latency: latency}
 	}
@@ -141,7 +141,7 @@ func (c *Client) ExecuteRequest(ctx context.Context, method, url string, headers
 	// PKS-008: Binary Protection (Max 1MB)
 	contentType := resp.Header.Get("Content-Type")
 	contentLength := resp.ContentLength
-	
+
 	isBinary := false
 	if strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "application/pdf") || contentLength > 1024*1024 {
 		isBinary = true

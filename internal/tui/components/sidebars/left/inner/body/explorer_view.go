@@ -21,13 +21,13 @@ func (m *ProjectTreeModel) View() string {
 
 	for i := m.ScrollYOffset; i < endIdx; i++ {
 		node := m.VisibleNodes[i]
-		
+
 		// Active Selection Style
 		isCursor := i == m.ActiveIndex
 		isSelected := node.ID == m.SelectedID && m.SelectedID != ""
-		
+
 		isCursorActive := m.IsFocused && isCursor
-		
+
 		prefix := "  "
 		if node.IsProject {
 			if node.IsExpanded {
@@ -50,7 +50,7 @@ func (m *ProjectTreeModel) View() string {
 		}
 
 		lineStr := prefix + node.ID + indicators
-		
+
 		runes := []rune(lineStr)
 		if len(runes) > m.Size.Width {
 			lineStr = string(runes[:m.Size.Width-3]) + "..."

@@ -169,7 +169,7 @@ func (m *RightSidebarModel) View() string {
 	m.Icons.Update(tea.WindowSizeMsg{Width: 4, Height: m.Size.Height})
 	iconsStr := m.Icons.View()
 	headerStr := m.Header.View()
-	
+
 	var bodyStr string
 	if m.Icons.ActiveIndex == 0 {
 		bodyStr = m.Chaos.View()
@@ -188,7 +188,7 @@ func (m *RightSidebarModel) View() string {
 	content := lipgloss.JoinHorizontal(lipgloss.Top, innerPanel, iconsStr)
 
 	return borderStyle.
-		Width(m.Size.Width - 1).
+		Width(m.Size.Width-1).
 		Height(m.Size.Height).
 		Border(lipgloss.NormalBorder(), false, false, false, true).
 		Render(content)
@@ -206,7 +206,7 @@ func (m *RightSidebarModel) SetFocus(focus bool) {
 func (m *RightSidebarModel) syncFocus() {
 	if m.IsFocused {
 		m.Icons.SetFocus(m.IsIconsFocused)
-		
+
 		isBodyFocused := !m.IsIconsFocused
 		if m.Icons.ActiveIndex == 0 {
 			m.Chaos.SetFocus(isBodyFocused)

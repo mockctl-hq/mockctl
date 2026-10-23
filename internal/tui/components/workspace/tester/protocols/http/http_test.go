@@ -26,7 +26,7 @@ func TestHttpTesterModel_FocusRouting(t *testing.T) {
 	_ = model.Init(tuiCtx)
 
 	model.SetFocus(true)
-	
+
 	// Initial focus should be FocusInput
 	assert.Equal(t, http.FocusInput, model.FocusRing)
 
@@ -80,7 +80,7 @@ func TestHttpTesterModel_Cancellation(t *testing.T) {
 	// Press Esc to cancel pending request
 	newModel, _ = model.Update(tea.KeyMsg{Type: tea.KeyEsc})
 	model = newModel.(*http.HttpTesterModel)
-	
+
 	viewStr := model.View()
 	assert.Contains(t, viewStr, "request cancelled by user")
 }
@@ -135,5 +135,8 @@ func TestHttpViewerModel_LoadingSpinner(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	goleak.VerifyTestMain(m, goleak.IgnoreAnyFunction("github.com/dlclark/regexp2/v2.runClock"))
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreAnyFunction("github.com/dlclark/regexp2.runClock"),
+		goleak.IgnoreAnyFunction("github.com/dlclark/regexp2/v2.runClock"),
+	)
 }

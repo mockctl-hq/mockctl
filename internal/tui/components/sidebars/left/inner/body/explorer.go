@@ -95,7 +95,7 @@ func (m *ProjectTreeModel) rebuildVisibleNodes() {
 		}
 	}
 	m.VisibleNodes = visible
-	
+
 	// Restore ActiveIndex based on SelectedID if possible
 	found := false
 	if m.SelectedID != "" {
@@ -107,7 +107,7 @@ func (m *ProjectTreeModel) rebuildVisibleNodes() {
 			}
 		}
 	}
-	
+
 	if !found {
 		// Clamp active index
 		if m.ActiveIndex >= len(m.VisibleNodes) {

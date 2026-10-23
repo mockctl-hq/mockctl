@@ -72,4 +72,3 @@ func (m *YamlEditorModel) CurrentTabSize() int {
 func (m *YamlEditorModel) AutoFormatEnabled() bool {
 	return m.AutoFormatOnSave
 }
-

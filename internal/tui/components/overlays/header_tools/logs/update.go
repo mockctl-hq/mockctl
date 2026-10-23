@@ -17,21 +17,21 @@ func (m *GlobalLogsModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 		if innerWidth < 10 {
 			innerWidth = 10
 		}
-		
+
 		innerHeight := msg.Height - 2
 		if innerHeight < 5 {
 			innerHeight = 5
 		}
-		
+
 		m.Search.Width = innerWidth
 		vpHeight := innerHeight - 9
 		if vpHeight < 1 {
 			vpHeight = 1
 		}
-		
+
 		m.Viewport.Width = innerWidth
 		m.Viewport.Height = vpHeight
-		
+
 		m.mu.Lock()
 		m.refreshViewport()
 		m.mu.Unlock()
@@ -69,7 +69,7 @@ func (m *GlobalLogsModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 		} else {
 			m.Viewport, cmd = m.Viewport.Update(msg)
 			cmds = append(cmds, cmd)
-			
+
 			// Detect manual scrolling to turn off auto-tail
 			if msg.String() == "up" || msg.String() == "k" {
 				m.AutoTail = false

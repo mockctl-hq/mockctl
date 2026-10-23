@@ -42,7 +42,7 @@ func (m *HeaderModel) Init(ctx types.TUIContext) tea.Cmd {
 
 func (m *HeaderModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 	var cmds []tea.Cmd
-	
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.Size = msg
@@ -67,7 +67,7 @@ func (m *HeaderModel) Update(msg tea.Msg) (types.Component, tea.Cmd) {
 
 func (m *HeaderModel) View() string {
 	logoStr := m.Logo.View()
-	
+
 	port := m.tuiCtx.ActivePort
 	if port <= 0 {
 		port = 8080
@@ -76,7 +76,7 @@ func (m *HeaderModel) View() string {
 	if m.Toast != nil && m.Toast.Visible {
 		statusStr = m.Toast.View()
 	}
-	
+
 	actionsStr := m.Actions.View()
 
 	// Calculate spacing
@@ -85,14 +85,14 @@ func (m *HeaderModel) View() string {
 	if padding < 0 {
 		padding = 0
 	}
-	
+
 	spaces := ""
 	for i := 0; i < padding; i++ {
 		spaces += " "
 	}
-	
+
 	content := lipgloss.JoinHorizontal(lipgloss.Top, " ", logoStr, "  ", statusStr, spaces, actionsStr)
-	
+
 	// Vertically center by pushing it down one line (since height is 3)
 	content = "\n" + content
 
