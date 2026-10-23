@@ -48,6 +48,10 @@ func (m *MockSystemStore) LogTelemetry(ctx context.Context, event string, data m
 	return nil
 }
 
+func (m *MockSystemStore) GetTelemetryHistory(ctx context.Context, limit int) ([]map[string]any, error) {
+	return nil, nil
+}
+
 func (m *MockSystemStore) SaveProject(ctx context.Context, name string, projectData []byte) error {
 	m.Projects[name] = projectData
 	return nil

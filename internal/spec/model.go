@@ -9,12 +9,19 @@ type SpecModel struct {
 	Routes  []RouteDef
 }
 
+// SchemaValidator validates JSON payloads against an OpenAPI schema.
+type SchemaValidator interface {
+	ValidateJSON(data []byte) error
+}
+
 type RouteDef struct {
-	Method      string
-	Path        string
-	Status      int
-	ContentType string
-	SchemaRef   any // Normalized schema representation
+	Method            string
+	Path              string
+	Status            int
+	ContentType       string
+	SchemaRef         any // Normalized schema representation
+	RequestBodySchema *NormalizedSchema
+	RequestValidator  SchemaValidator
 }
 
 // NormalizedSchema translates kin-openapi AST into safe Go structs

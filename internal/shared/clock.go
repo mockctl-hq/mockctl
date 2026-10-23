@@ -7,6 +7,8 @@ import "time"
 type Clock interface {
 	// Now returns the current local time.
 	Now() time.Time
+	// After waits for the duration to elapse and then sends the current time on the returned channel.
+	After(d time.Duration) <-chan time.Time
 }
 
 // RealClock is the production implementation of the Clock interface.
@@ -18,4 +20,8 @@ func NewRealClock() *RealClock {
 
 func (c *RealClock) Now() time.Time {
 	return time.Now()
+}
+
+func (c *RealClock) After(d time.Duration) <-chan time.Time {
+	return time.After(d)
 }

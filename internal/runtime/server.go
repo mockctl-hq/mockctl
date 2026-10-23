@@ -2,7 +2,12 @@ package runtime
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -30,6 +35,7 @@ type HTTPServer struct {
 	httpServer  *http.Server
 	rateLimiter *rate.Limiter
 	broker      EventSubscriber
+	corsEnabled atomic.Bool
 }
 
 // NewHTTPServer initializes a new HTTPServer with the required middleware pipeline.
@@ -46,6 +52,7 @@ func NewHTTPServer(logger shared.Logger, store shared.SystemStore, manager Proje
 		rateLimiter: rate.NewLimiter(rate.Limit(100), 10),
 		broker:      broker,
 	}
+	s.corsEnabled.Store(true)
 
 	// Strict Middleware Chain (EDL-025, PKS-024)
 	r.Use(middleware.Recoverer)
@@ -58,8 +65,67 @@ func NewHTTPServer(logger shared.Logger, store shared.SystemStore, manager Proje
 	return s
 }
 
+// SetCORS dynamically toggles global CORS on mock endpoints.
+func (s *HTTPServer) SetCORS(enabled bool) {
+	s.corsEnabled.Store(enabled)
+}
+
+// CORSEnabled reports whether global CORS is active for mock endpoints.
+func (s *HTTPServer) CORSEnabled() bool {
+	return s.corsEnabled.Load()
+}
+
+// mockCorsMiddleware conditionally injects CORS headers and handles OPTIONS preflight
+// requests based on the Global CORS setting.
+func (s *HTTPServer) mockCorsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !s.corsEnabled.Load() {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD")
+
+		reqHeaders := r.Header.Get("Access-Control-Request-Headers")
+		if reqHeaders != "" {
+			w.Header().Set("Access-Control-Allow-Headers", reqHeaders)
+		} else {
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+		}
+		w.Header().Set("Access-Control-Expose-Headers", "*")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // loggerMiddleware integrates with shared.Logger and scrubs Authorization headers (PKS-028)
 func (s *HTTPServer) loggerMiddleware(next http.Handler) http.Handler {
+	// Initialize a dedicated logger for HTTP requests
+	var reqLogger *log.Logger
+	if userHome, err := os.UserHomeDir(); err == nil && userHome != "" {
+		reqLogDir := filepath.Join(userHome, ".mockctl")
+		_ = os.MkdirAll(reqLogDir, 0750)
+		reqLogPath := filepath.Join(reqLogDir, "requests.log")
+		// #nosec G302 G304 -- reqLogPath is deterministic in ~/.mockctl and uses secure 0600 permissions
+		logFile, err := os.OpenFile(reqLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		if err == nil {
+			reqLogger = log.New(logFile, "", log.Ldate|log.Ltime)
+		}
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -72,14 +138,11 @@ func (s *HTTPServer) loggerMiddleware(next http.Handler) http.Handler {
 		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 		next.ServeHTTP(ww, r)
 
-		s.logger.Info("HTTP Request",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"status", ww.Status(),
-			"bytes", ww.BytesWritten(),
-			"duration_ms", time.Since(start).Milliseconds(),
-			"headers", sanitizedHeaders,
-		)
+		if reqLogger != nil {
+			logStr := fmt.Sprintf("HTTP %s %s | status: %d | bytes: %d | %dms",
+				r.Method, r.URL.Path, ww.Status(), ww.BytesWritten(), time.Since(start).Milliseconds())
+			reqLogger.Println(logStr)
+		}
 	})
 }
 
@@ -87,8 +150,8 @@ func (s *HTTPServer) setupRoutes() {
 	// Mount Admin Routes under /__mockctl/*
 	s.setupAdminRoutes()
 
-	// Mount RuntimeEngine as the catch-all wildcard for mock execution
-	s.router.Mount("/", s.engine)
+	// Mount RuntimeEngine as the catch-all wildcard for mock execution with optional CORS
+	s.router.Mount("/", s.mockCorsMiddleware(s.engine))
 }
 
 // Start binds the server to the specified port and begins listening.

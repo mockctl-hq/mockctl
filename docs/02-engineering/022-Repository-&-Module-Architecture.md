@@ -204,6 +204,7 @@ mockctl/
 │   ├── config/
 │   ├── storage/
 │   ├── data/
+│   ├── tui/
 │   └── shared/
 ├── docs/
 ├── scripts/
@@ -754,6 +755,7 @@ internal/
 ├── config/
 ├── storage/
 ├── data/
+├── tui/
 └── shared/
 ```
 Each module has one primary architectural responsibility.
@@ -780,6 +782,7 @@ Mock:ctl maps its repository modules to the system architecture as follows:
 | Architectural Layer | Repository Module | Primary Responsibility |
 |---|---|---|
 | Presentation | `cmd/` | CLI and executable entry points |
+| Presentation | `internal/tui/` | Internal TUI Presentation & UI Components |
 | Application Core | `internal/app/` | Application orchestration |
 | Domain Services | `internal/project/` | Project lifecycle and project domain |
 | Domain Services | `internal/spec/` | Specification processing |

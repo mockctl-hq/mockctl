@@ -9,6 +9,7 @@
 *.test
 *.out
 *.prof
+*.log
 
 # OS specific files
 .DS_Store

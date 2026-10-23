@@ -275,7 +275,7 @@ The selected platform provides:
 
 ## Official Technology
 
-**Cobra**
+**Cobra** (CLI) & **charmbracelet/bubbletea** (Internal Testing TUI)
 
 ### Primary Purpose
 
@@ -290,19 +290,13 @@ It is responsible for:
 - Help generation
 - Shell completion
 
-### Why Cobra
+### Why Cobra & BubbleTea
 
-Cobra was selected because it provides:
-
-- Mature ecosystem
-- Excellent Go integration
-- Strong community support
-- High maintainability
-- Excellent documentation
+Cobra provides a mature ecosystem for the CLI. BubbleTea is officially adopted (EDL-057) to provide a rich, keyboard-driven interface explicitly to test the Go Backend in real-time, preventing bugs before porting features to the public Flutter app.
 
 ### Reference
 
-**Engineering Decision:** EDL-004
+**Engineering Decision:** EDL-004, EDL-057
 
 ---
 

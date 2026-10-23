@@ -160,6 +160,25 @@ func (m *MemoryStateStore) Reset(ctx context.Context) error {
 	return nil
 }
 
+// GetSnapshot returns a full snapshot of the memory store for the State Inspector overlay.
+func (m *MemoryStateStore) GetSnapshot() map[string]map[string]map[string]any {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	// Deep copy to prevent race conditions during UI traversal
+	snapshot := make(map[string]map[string]map[string]any)
+	for coll, docs := range m.store {
+		snapshot[coll] = make(map[string]map[string]any)
+		for id, doc := range docs {
+			snapshot[coll][id] = make(map[string]any)
+			for k, v := range doc {
+				snapshot[coll][id][k] = v
+			}
+		}
+	}
+	return snapshot
+}
+
 // deepMerge recursively merges src map into dst map.
 func deepMerge(dst, src map[string]any) map[string]any {
 	out := make(map[string]any)
