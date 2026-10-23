@@ -47,6 +47,11 @@ func (e *RuntimeEngine) formatResponse(w http.ResponseWriter, status int, header
 }
 
 func (e *RuntimeEngine) handleGet(ctx context.Context, w http.ResponseWriter, r *http.Request, endpoint generator.EndpointHandler) {
+	if tmpl, ok := endpoint.Responses[http.StatusOK]; ok && tmpl.IsOverride {
+		e.formatResponse(w, http.StatusOK, tmpl.Headers, tmpl.Body)
+		return
+	}
+
 	flatPath := buildFlatPath(r, endpoint)
 	collection, id := extractCollectionAndID(flatPath)
 

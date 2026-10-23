@@ -120,12 +120,16 @@ Abstracts the OS file system to enable fully in-memory testing.
 ```go
 package storage
 
-import "context"
+import (
+    "context"
+    "os"
+)
 
 type FileSystem interface {
     ReadFile(ctx context.Context, path string) ([]byte, error)
     WriteFile(ctx context.Context, path string, data []byte) error
     Exists(ctx context.Context, path string) bool
+    Stat(ctx context.Context, path string) (os.FileInfo, error)
 }
 
 // LocalFS is the concrete implementation used in production.
@@ -142,6 +146,7 @@ type SystemStore interface {
     SaveAuthToken(ctx context.Context, jwtToken string) error
     GetAuthToken(ctx context.Context) (string, error)
     LogTelemetry(ctx context.Context, event string, data []byte) error
+    GetTelemetryHistory(ctx context.Context, limit int) ([]byte, error)
     Close() error
 }
 
@@ -325,6 +330,12 @@ type ChaosEvaluator interface {
     Evaluate(ctx context.Context, r *http.Request) *shared.DomainError
 }
 
+// EventBroker handles internal telemetry and real-time events
+type EventBroker interface {
+    SubscribeRaw(ctx context.Context) (<-chan any, error)
+    Publish(event any)
+}
+
 // StateStore handles full CRUD memory persistence for dynamic simulation
 type StateStore interface {
     Insert(ctx context.Context, collection string, data map[string]any) error
@@ -345,9 +356,10 @@ type RuntimeEngine struct {
     definition *generator.RuntimeDefinition
     state      StateStore
     chaos      ChaosEvaluator
+    broker     EventBroker
 }
 
-func NewRuntimeEngine(l shared.Logger, def *generator.RuntimeDefinition, store StateStore, chaos ChaosEvaluator) *RuntimeEngine {
+func NewRuntimeEngine(l shared.Logger, def *generator.RuntimeDefinition, store StateStore, chaos ChaosEvaluator, broker EventBroker) *RuntimeEngine {
     return &RuntimeEngine{
         logger:     l,
         definition: def,
@@ -414,6 +426,9 @@ func NewApp(logger shared.Logger, fs storage.FileSystem) *App {
 
 // StartServer orchestrates reading the spec, generating the mock, and starting the HTTP server
 func (a *App) StartServer(ctx context.Context, projectPath string) error
+
+// ReloadEngine dynamically rebuilds the Spec and MockGenerator, hot-swapping the HTTP router
+func (a *App) ReloadEngine(ctx context.Context, projectPath string) error
 ```
 
 ---

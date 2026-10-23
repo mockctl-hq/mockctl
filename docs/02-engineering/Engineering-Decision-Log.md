@@ -777,7 +777,31 @@ The Mock:ctl Command Line Interface (CLI) is strictly an internal developer and 
 
 **End of Document**
 
-**Decision Range: EDL-001 → EDL-053**
+**Decision Range: EDL-001 → EDL-057**
+
+---
+
+## EDL-057 — TUI Framework for Internal Developer Harness
+
+**Decision:**  
+Internal TUI Framework = `charmbracelet/bubbletea` and `charmbracelet/lipgloss`
+
+**Status:**  
+✅ Approved
+
+**Statement:**  
+Mock:ctl shall use the Charmbracelet ecosystem (`bubbletea`, `lipgloss`, `bubbles`) to construct an advanced Terminal User Interface (TUI). This TUI is explicitly governed by EDL-053 as an **Internal Developer Harness** used strictly for testing the Go Backend, Telemetry, and SystemStore endpoints. It is not intended for public end-user distribution.
+
+**Reason:**  
+- Provides an extremely fast, keyboard-driven interface to test the backend engine in real-time.
+- Ensures the core Go backend logic (which will power the Flutter UI) is battle-tested.
+- Elm-architecture ensures predictable state management.
+
+**Alternatives Considered:**
+- `tview` (Less flexible styling).
+- `gocui` (Outdated).
+
+**Replacement Risk:**  Medium
 
 ---
 

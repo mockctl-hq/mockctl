@@ -31,6 +31,7 @@ type SystemStore interface {
 	SaveAuthToken(ctx context.Context, token string) error
 	GetAuthToken(ctx context.Context) (string, error)
 	LogTelemetry(ctx context.Context, event string, data map[string]any) error
+	GetTelemetryHistory(ctx context.Context, limit int) ([]map[string]any, error)
 	SaveProject(ctx context.Context, name string, projectData []byte) error
 	GetProject(ctx context.Context, name string) ([]byte, error)
 	ListProjects(ctx context.Context) (map[string][]byte, error)

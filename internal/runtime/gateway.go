@@ -21,13 +21,15 @@ type ProjectManager interface {
 
 // ProjectGateway handles dynamic routing to multiple projects.
 type ProjectGateway struct {
-	mu      sync.RWMutex
-	engines map[string]*RuntimeEngine
+	mu               sync.RWMutex
+	engines          map[string]*RuntimeEngine
+	strictValidation bool
 }
 
 func NewProjectGateway() *ProjectGateway {
 	return &ProjectGateway{
-		engines: make(map[string]*RuntimeEngine),
+		engines:          make(map[string]*RuntimeEngine),
+		strictValidation: true,
 	}
 }
 
@@ -39,7 +41,30 @@ func (g *ProjectGateway) SetEngine(projectName string, engine *RuntimeEngine) {
 		// Context cancellation can be implemented here if old engine stores a cancel func
 		_ = old
 	}
+	if engine != nil {
+		engine.SetStrictValidation(g.strictValidation)
+	}
 	g.engines[projectName] = engine
+}
+
+// SetStrictValidation updates strict schema validation mode on all existing engines
+// and stores the default for newly added engines.
+func (g *ProjectGateway) SetStrictValidation(enabled bool) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.strictValidation = enabled
+	for _, engine := range g.engines {
+		if engine != nil {
+			engine.SetStrictValidation(enabled)
+		}
+	}
+}
+
+// StrictValidationEnabled reports whether strict schema validation is enabled on the gateway.
+func (g *ProjectGateway) StrictValidationEnabled() bool {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	return g.strictValidation
 }
 
 func (g *ProjectGateway) RemoveEngine(projectName string) {
@@ -52,6 +77,17 @@ func (g *ProjectGateway) GetEngine(projectName string) *RuntimeEngine {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
 	return g.engines[projectName]
+}
+
+func (g *ProjectGateway) ListEngines() map[string]*RuntimeEngine {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	
+	copy := make(map[string]*RuntimeEngine)
+	for k, v := range g.engines {
+		copy[k] = v
+	}
+	return copy
 }
 
 // ServeHTTP delegates the request to the appropriate project's engine.

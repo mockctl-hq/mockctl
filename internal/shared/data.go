@@ -25,4 +25,6 @@ type ChaosEvaluator interface {
 	// Returns an HTTP status code to inject (0 if no error is injected).
 	Evaluate(ctx context.Context) (int, error)
 	UpdateConfig(ctx context.Context, errorRate int, latencyMs int)
+	UpdateConfigWithStatus(ctx context.Context, enabled bool, errorRate int, latencyMs int, statusCode int)
+	Config() (enabled bool, errorRate int, latencyMs int, statusCode int)
 }

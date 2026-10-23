@@ -56,8 +56,6 @@ func (p *TelemetryPersister) run(ctx context.Context) {
 	if ch == nil {
 		return
 	}
-	defer p.broker.UnsubscribeRaw(ch)
-
 	buffer := make([]runtime.Event, 0, p.batchSize)
 	ticker := time.NewTicker(p.flushFreq)
 	defer ticker.Stop()
@@ -97,6 +95,7 @@ func (p *TelemetryPersister) run(ctx context.Context) {
 	}
 
 	defer func() {
+		p.broker.UnsubscribeRaw(ch)
 		flush()
 		// Drain the channel to prevent Broker from leaking memory
 		for ev := range ch {

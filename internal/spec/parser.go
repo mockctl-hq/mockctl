@@ -2,6 +2,8 @@ package spec
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +12,45 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
+
+// kinSchemaValidator validates JSON request bodies against an openapi3.Schema
+// while keeping kin-openapi types strictly encapsulated inside internal/spec.
+type kinSchemaValidator struct {
+	schema   *openapi3.Schema
+	required bool
+}
+
+func newKinSchemaValidator(schema *openapi3.Schema, required bool) SchemaValidator {
+	return &kinSchemaValidator{
+		schema:   schema,
+		required: required,
+	}
+}
+
+func (v *kinSchemaValidator) ValidateJSON(data []byte) error {
+	trimmed := strings.TrimSpace(string(data))
+	if len(trimmed) == 0 {
+		if v.required {
+			return errors.New("request body is required")
+		}
+		return nil
+	}
+
+	if v.schema == nil {
+		return nil
+	}
+
+	var val any
+	if err := json.Unmarshal([]byte(trimmed), &val); err != nil {
+		return fmt.Errorf("malformed JSON body: %w", err)
+	}
+
+	if err := v.schema.VisitJSON(val); err != nil {
+		return fmt.Errorf("schema validation failed: %w", err)
+	}
+
+	return nil
+}
 
 const maxFileSize = 50 * 1024 * 1024 // 50MB
 
@@ -94,6 +135,50 @@ func (p *OpenAPIParser) extractRoutesFromDoc(doc *openapi3.Swagger, globalBasePa
 				fullPath = extractBasePath((*operation.Servers)[0].URL) + path
 			}
 
+			// Extract RequestBody schema & validator once per operation
+			var reqSchema *NormalizedSchema
+			var reqValidator SchemaValidator
+
+			if operation.RequestBody != nil && operation.RequestBody.Value != nil {
+				reqBody := operation.RequestBody.Value
+				isRequired := reqBody.Required
+
+				var targetSchemaRef *openapi3.SchemaRef
+				if mediaType, ok := reqBody.Content["application/json"]; ok {
+					targetSchemaRef = mediaType.Schema
+				} else {
+					// Fallback to first available content type
+					for _, mediaType := range reqBody.Content {
+						targetSchemaRef = mediaType.Schema
+						break
+					}
+				}
+
+				if targetSchemaRef != nil && targetSchemaRef.Value != nil {
+					visited := make(map[string]bool)
+					if norm, err := normalizeSchema(targetSchemaRef, visited, 0); err == nil {
+						reqSchema = norm
+					}
+					reqValidator = newKinSchemaValidator(targetSchemaRef.Value, isRequired)
+				} else if isRequired {
+					reqValidator = newKinSchemaValidator(nil, true)
+				}
+			}
+
+			// If no responses are defined, register a default route
+			if len(operation.Responses) == 0 {
+				routes = append(routes, RouteDef{
+					Method:            method,
+					Path:              fullPath,
+					Status:            200,
+					ContentType:       "application/json",
+					SchemaRef:         nil,
+					RequestBodySchema: reqSchema,
+					RequestValidator:  reqValidator,
+				})
+				continue
+			}
+
 			// Iterate over responses
 			for statusStr, responseRef := range operation.Responses {
 				status, err := strconv.Atoi(statusStr)
@@ -108,11 +193,13 @@ func (p *OpenAPIParser) extractRoutesFromDoc(doc *openapi3.Swagger, globalBasePa
 				// If no content, add a route with nil schema
 				if len(responseRef.Value.Content) == 0 {
 					routes = append(routes, RouteDef{
-						Method:      method,
-						Path:        fullPath,
-						Status:      status,
-						ContentType: "",
-						SchemaRef:   nil,
+						Method:            method,
+						Path:              fullPath,
+						Status:            status,
+						ContentType:       "",
+						SchemaRef:         nil,
+						RequestBodySchema: reqSchema,
+						RequestValidator:  reqValidator,
 					})
 					continue
 				}
@@ -140,11 +227,13 @@ func (p *OpenAPIParser) extractRoutesFromDoc(doc *openapi3.Swagger, globalBasePa
 				}
 
 				routes = append(routes, RouteDef{
-					Method:      method,
-					Path:        fullPath,
-					Status:      status,
-					ContentType: contentType,
-					SchemaRef:   normalized,
+					Method:            method,
+					Path:              fullPath,
+					Status:            status,
+					ContentType:       contentType,
+					SchemaRef:         normalized,
+					RequestBodySchema: reqSchema,
+					RequestValidator:  reqValidator,
 				})
 			}
 		}

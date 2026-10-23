@@ -158,6 +158,35 @@ func (b *BBoltSystemStore) LogTelemetry(ctx context.Context, event string, data 
 	})
 }
 
+func (b *BBoltSystemStore) GetTelemetryHistory(ctx context.Context, limit int) ([]map[string]any, error) {
+	var results []map[string]any
+	err := b.db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket(bucketTelemetry)
+		if bucket == nil {
+			return shared.ErrNotFound
+		}
+		
+		c := bucket.Cursor()
+		count := 0
+		// Iterate backwards from the newest log to get the most recent `limit` logs
+		for k, v := c.Last(); k != nil && count < limit; k, v = c.Prev() {
+			var data map[string]any
+			if err := json.Unmarshal(v, &data); err == nil {
+				results = append(results, data)
+				count++
+			}
+		}
+		return nil
+	})
+	
+	// Since we got the newest first, reverse them to be in chronological order (oldest first)
+	for i, j := 0, len(results)-1; i < j; i, j = i+1, j-1 {
+		results[i], results[j] = results[j], results[i]
+	}
+	
+	return results, err
+}
+
 func (b *BBoltSystemStore) SaveProject(ctx context.Context, name string, projectData []byte) error {
 	if b.readOnly {
 		return shared.ErrDatabaseLocked

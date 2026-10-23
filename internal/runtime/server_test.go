@@ -19,6 +19,9 @@ func (f *fakeSystemStore) GetAuthToken(ctx context.Context) (string, error) {
 func (f *fakeSystemStore) LogTelemetry(ctx context.Context, event string, data map[string]any) error {
 	return nil
 }
+func (f *fakeSystemStore) GetTelemetryHistory(ctx context.Context, limit int) ([]map[string]any, error) {
+	return nil, nil
+}
 func (f *fakeSystemStore) SaveProject(ctx context.Context, name string, projectData []byte) error {
 	return nil
 }
@@ -120,5 +123,64 @@ func TestHTTPServer_LocalhostBinding(t *testing.T) {
 
 	if rr.Code != http.StatusForbidden {
 		t.Errorf("expected 403 Forbidden for non-localhost, got %d", rr.Code)
+	}
+}
+
+func TestHTTPServer_MockCORS(t *testing.T) {
+	t.Parallel()
+	server := NewHTTPServer(&fakeLogger{}, &fakeSystemStore{}, &fakeProjectManager{}, &fakeEngine{}, nil)
+
+	// 1. By default, CORS is enabled
+	if !server.CORSEnabled() {
+		t.Fatalf("expected CORS to be enabled by default")
+	}
+
+	// 2. Preflight OPTIONS request on mock route
+	optReq := httptest.NewRequest(http.MethodOptions, "/petstore/pets", nil)
+	optReq.Header.Set("Origin", "http://localhost:3000")
+	optReq.Header.Set("Access-Control-Request-Headers", "Content-Type, Authorization")
+	optRr := httptest.NewRecorder()
+	server.router.ServeHTTP(optRr, optReq)
+
+	if optRr.Code != http.StatusNoContent {
+		t.Errorf("expected 204 No Content for OPTIONS, got %d", optRr.Code)
+	}
+	if origin := optRr.Header().Get("Access-Control-Allow-Origin"); origin != "http://localhost:3000" {
+		t.Errorf("expected Allow-Origin 'http://localhost:3000', got '%s'", origin)
+	}
+	if headers := optRr.Header().Get("Access-Control-Allow-Headers"); headers != "Content-Type, Authorization" {
+		t.Errorf("expected Allow-Headers echo, got '%s'", headers)
+	}
+
+	// 3. GET mock route with CORS enabled
+	getReq := httptest.NewRequest(http.MethodGet, "/petstore/pets", nil)
+	getReq.Header.Set("Origin", "http://localhost:3000")
+	getRr := httptest.NewRecorder()
+	server.router.ServeHTTP(getRr, getReq)
+
+	if getRr.Code != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", getRr.Code)
+	}
+	if origin := getRr.Header().Get("Access-Control-Allow-Origin"); origin != "http://localhost:3000" {
+		t.Errorf("expected Allow-Origin 'http://localhost:3000', got '%s'", origin)
+	}
+
+	// 4. Disable CORS dynamically
+	server.SetCORS(false)
+	if server.CORSEnabled() {
+		t.Fatalf("expected CORS to be disabled")
+	}
+
+	// 5. GET mock route with CORS disabled
+	noCorsReq := httptest.NewRequest(http.MethodGet, "/petstore/pets", nil)
+	noCorsReq.Header.Set("Origin", "http://localhost:3000")
+	noCorsRr := httptest.NewRecorder()
+	server.router.ServeHTTP(noCorsRr, noCorsReq)
+
+	if noCorsRr.Code != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", noCorsRr.Code)
+	}
+	if origin := noCorsRr.Header().Get("Access-Control-Allow-Origin"); origin != "" {
+		t.Errorf("expected empty Allow-Origin when CORS disabled, got '%s'", origin)
 	}
 }

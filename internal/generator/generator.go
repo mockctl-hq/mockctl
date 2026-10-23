@@ -35,20 +35,36 @@ func (g *MockGenerator) Generate(ctx context.Context, model *spec.SpecModel, wsC
 		handler, exists := def.Endpoints[id]
 		if !exists {
 			handler = EndpointHandler{
-				Method:    route.Method,
-				Path:      route.Path,
-				Responses: make(map[int]ResponseTemplate),
+				Method:           route.Method,
+				Path:             route.Path,
+				RequestValidator: route.RequestValidator,
+				Responses:        make(map[int]ResponseTemplate),
 			}
+		} else if handler.RequestValidator == nil && route.RequestValidator != nil {
+			handler.RequestValidator = route.RequestValidator
 		}
 
 		// Apply override if it exists
 		var body any
 		overridden := false
 		if wsCtx != nil && wsCtx.Overrides != nil {
-			if pathOverrides, ok := wsCtx.Overrides[route.Path]; ok {
+			pathOverrides, ok := wsCtx.Overrides[route.Path]
+			if !ok {
+				pathOverrides, ok = wsCtx.Overrides[id]
+			}
+			if ok {
 				if overrideBody, ok := pathOverrides[route.Status]; ok {
 					body = overrideBody
 					overridden = true
+				} else if overrideBody, ok := pathOverrides[200]; ok {
+					body = overrideBody
+					overridden = true
+				} else {
+					for _, overrideBody := range pathOverrides {
+						body = overrideBody
+						overridden = true
+						break
+					}
 				}
 			}
 		}
@@ -66,8 +82,9 @@ func (g *MockGenerator) Generate(ctx context.Context, model *spec.SpecModel, wsC
 		}
 
 		handler.Responses[route.Status] = ResponseTemplate{
-			Headers: map[string]string{"Content-Type": route.ContentType},
-			Body:    body,
+			Headers:    map[string]string{"Content-Type": route.ContentType},
+			Body:       body,
+			IsOverride: overridden,
 		}
 
 		def.Endpoints[id] = handler

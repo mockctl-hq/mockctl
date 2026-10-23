@@ -9,6 +9,7 @@ type WorkspaceContext struct {
 // Project represents the hybrid data model for a Mock:ctl project.
 type Project struct {
 	Name            string            `json:"name"`
+	SpecFilename    string            `json:"spec_filename"`    // Filename of the imported spec
 	OpenAPISpec     string            `json:"openapi_spec"`     // Raw YAML/JSON string
 	CustomEndpoints []EndpointHandler `json:"custom_endpoints"` // Manually added endpoints
 	Workspace       WorkspaceContext  `json:"workspace"`
